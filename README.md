@@ -92,7 +92,7 @@ tests/
 1. Open the extensions page: `chrome://extensions`, `brave://extensions`, or
    `edge://extensions`.
 2. Enable **Developer mode** (top-right toggle).
-3. Click **Load unpacked** and select this folder (`/mnt/data/Documents/cma`).
+3. Click **Load unpacked** and select this folder (`/mnt/data/Documents/chatguard`).
 4. Open [chatgpt.com](https://chatgpt.com), [claude.ai](https://claude.ai), or
    [gemini.google.com](https://gemini.google.com) and start a chat.
 
@@ -108,7 +108,7 @@ tests/
 Safari has no load-unpacked mode; it needs an Xcode wrapper. On a Mac with
 Xcode installed:
 
-1. `xcrun safari-web-extension-converter /mnt/data/Documents/cma`
+1. `xcrun safari-web-extension-converter /mnt/data/Documents/chatguard`
    (add `--project-location .` to keep the generated project here).
 2. Open the generated Xcode project, choose your signing team (a free Personal
    Team is fine), and run the macOS app target — it registers the extension.
