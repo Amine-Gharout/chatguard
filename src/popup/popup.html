@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ChatGuard</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <h1>ChatGuard</h1>
+      <span class="subtitle">Send-nudge prototype · CDH demo</span>
+    </header>
+
+    <label class="row master">
+      <span>Enable nudges</span>
+      <input type="checkbox" id="master-toggle" />
+    </label>
+
+    <fieldset>
+      <legend>Warn about</legend>
+      <div id="category-list"></div>
+    </fieldset>
+
+    <p class="footnote">Runs fully locally. Nothing leaves your browser.</p>
+
+    <script src="../shared/settings.js"></script>
+    <script src="../shared/storage.js"></script>
+    <script src="../shared/detector.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
