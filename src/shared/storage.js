@@ -15,20 +15,36 @@
     typeof browser.storage === "object" &&
     browser.storage !== null;
 
-  function get(defaults, callback) {
+  function getArea(area, defaults, callback) {
     if (hasBrowserApi) {
-      browser.storage.sync.get(defaults).then(callback);
+      browser.storage[area].get(defaults).then(callback);
     } else {
-      chrome.storage.sync.get(defaults, callback);
+      chrome.storage[area].get(defaults, callback);
     }
   }
 
-  function set(items) {
+  function setArea(area, items) {
     if (hasBrowserApi) {
-      browser.storage.sync.set(items).catch(function () {});
+      browser.storage[area].set(items).catch(function () {});
     } else {
-      chrome.storage.sync.set(items);
+      chrome.storage[area].set(items);
     }
+  }
+
+  function get(defaults, callback) {
+    getArea("sync", defaults, callback);
+  }
+
+  function set(items) {
+    setArea("sync", items);
+  }
+
+  function getLocal(defaults, callback) {
+    getArea("local", defaults, callback);
+  }
+
+  function setLocal(items) {
+    setArea("local", items);
   }
 
   function onChanged(listener) {
@@ -38,5 +54,11 @@
     }
   }
 
-  global.ChatGuardStorage = { get: get, set: set, onChanged: onChanged };
+  global.ChatGuardStorage = {
+    get: get,
+    set: set,
+    getLocal: getLocal,
+    setLocal: setLocal,
+    onChanged: onChanged
+  };
 })(typeof globalThis !== "undefined" ? globalThis : this);

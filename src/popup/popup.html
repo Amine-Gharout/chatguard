@@ -17,12 +17,23 @@
       <input type="checkbox" id="master-toggle" />
     </label>
 
+    <label class="row">
+      <span>AI classifier (DeepSeek)</span>
+      <input type="checkbox" id="llm-toggle" />
+    </label>
+
     <fieldset>
       <legend>Warn about</legend>
       <div id="category-list"></div>
     </fieldset>
 
-    <p class="footnote">Runs fully locally. Nothing leaves your browser.</p>
+    <fieldset>
+      <legend>DeepSeek API key (stored locally)</legend>
+      <input type="password" id="api-key" class="key-input" placeholder="sk-…" autocomplete="off" spellcheck="false" />
+      <p class="footnote">Optional. When the AI classifier is on, your message text is sent to DeepSeek for classification.</p>
+    </fieldset>
+
+    <p class="footnote">Rule-based detection is local. Nothing is stored or logged.</p>
 
     <script src="../shared/settings.js"></script>
     <script src="../shared/storage.js"></script>

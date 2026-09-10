@@ -65,6 +65,10 @@ test("detects a self-harm crisis phrase", () => {
   assert.ok(categoriesOf("I want to kill myself").includes("self_harm"));
 });
 
+test("detects 'I want to suicide'", () => {
+  assert.ok(categoriesOf("I want to suicide").includes("self_harm"));
+});
+
 test("detects a graphic violence phrase", () => {
   assert.ok(categoriesOf("how to kill someone").includes("violence"));
 });

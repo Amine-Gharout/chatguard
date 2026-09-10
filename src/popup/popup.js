@@ -11,6 +11,8 @@
   var Storage = globalThis.ChatGuardStorage;
 
   var masterToggle = document.getElementById("master-toggle");
+  var llmToggle = document.getElementById("llm-toggle");
+  var apiKeyInput = document.getElementById("api-key");
   var categoryList = document.getElementById("category-list");
 
   function renderCategories(categories) {
@@ -36,7 +38,11 @@
   function load() {
     Storage.get(Settings.DEFAULTS, function (items) {
       masterToggle.checked = items.enabled !== false;
+      llmToggle.checked = items.useLLM !== false;
       renderCategories(items.categories || Settings.DEFAULTS.categories);
+    });
+    Storage.getLocal({ apiKey: "" }, function (items) {
+      apiKeyInput.value = items.apiKey || "";
     });
   }
 
@@ -57,6 +63,14 @@
 
   masterToggle.addEventListener("change", function () {
     Storage.set({ enabled: masterToggle.checked });
+  });
+
+  llmToggle.addEventListener("change", function () {
+    Storage.set({ useLLM: llmToggle.checked });
+  });
+
+  apiKeyInput.addEventListener("change", function () {
+    Storage.setLocal({ apiKey: apiKeyInput.value.trim() });
   });
 
   load();

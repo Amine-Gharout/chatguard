@@ -8,6 +8,7 @@
 
   var DEFAULTS = {
     enabled: true,
+    useLLM: true,
     categories: {
       romantic: true,
       distress: true,

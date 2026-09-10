@@ -5,6 +5,8 @@
 .vscode/
 .idea/
 *.swp
+.env
+plan.md
 
 # Logs
 *.log
@@ -16,3 +18,7 @@ build/
 
 # Node
 node_modules/
+
+# Local secrets (never commit)
+src/config.local.js
+config.local.js

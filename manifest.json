@@ -4,6 +4,10 @@
   "version": "0.1.0",
   "description": "Research prototype: nudges you before sending sensitive/emotional messages (romantic, distress, self-harm, violence, explicit content, private info, and more) to ChatGPT, Claude, or Gemini. Runs fully locally.",
   "permissions": ["storage"],
+  "host_permissions": ["https://api.deepseek.com/*"],
+  "background": {
+    "service_worker": "src/background/service-worker.js"
+  },
   "action": {
     "default_popup": "src/popup/popup.html",
     "default_title": "ChatGuard"
@@ -33,6 +37,7 @@
         "src/shared/storage.js",
         "src/shared/detector.js",
         "src/content/dom.js",
+        "src/content/files.js",
         "src/content/modal.js",
         "src/content/content.js"
       ]

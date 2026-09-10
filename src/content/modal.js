@@ -10,6 +10,7 @@
 
   var host = null;
   var previousFocus = null;
+  var indicatorHost = null;
 
   var STYLE =
     ".overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;" +
@@ -28,7 +29,11 @@
     ".btn { border: 0; border-radius: 8px; padding: 9px 14px; font-size: 14px; cursor: pointer; }" +
     ".btn.secondary { background: #3a3a3a; color: #ececec; }" +
     ".btn.primary { background: #a259ff; color: #ffffff; }" +
-    ".btn:focus-visible { outline: 2px solid #ffffff; outline-offset: 2px; }";
+    ".btn:focus-visible { outline: 2px solid #ffffff; outline-offset: 2px; }" +
+    ".spinner { width: 18px; height: 18px; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.2); border-top-color: #a259ff; border-radius: 50%; animation: chatguard-spin 0.8s linear infinite; }" +
+    ".pill { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: #1f1f1f; color: #ececec; border: 1px solid #3a3a3a; box-shadow: 0 4px 16px rgba(0,0,0,0.35); font-size: 13px; pointer-events: none; }" +
+    "@keyframes chatguard-spin { to { transform: rotate(360deg); } }" +
+    ".cat-reason { margin: 4px 0 0; font-size: 13px; line-height: 1.45; color: #b8b8b8; font-style: italic; }";
 
   function createHost() {
     if (host && host.isConnected) return host;
@@ -86,6 +91,13 @@
         catGuidance.className = "cat-guidance";
         catGuidance.textContent = matches[i].guidance;
         cat.appendChild(catGuidance);
+      }
+
+      if (matches[i].reason) {
+        var catReason = document.createElement("p");
+        catReason.className = "cat-reason";
+        catReason.textContent = matches[i].reason;
+        cat.appendChild(catReason);
       }
 
       dialog.appendChild(cat);
@@ -166,6 +178,42 @@
     editButton.focus();
   }
 
+  function showIndicator() {
+    if (indicatorHost && indicatorHost.isConnected) return;
+    var h = document.createElement("div");
+    h.id = "chatguard-indicator-host";
+    h.style.cssText =
+      "all: initial; position: fixed; top: 0; left: 0; width: 0; height: 0; z-index: 2147483647; pointer-events: none;";
+    document.documentElement.appendChild(h);
+
+    var shadow = h.attachShadow({ mode: "open" });
+    var style = document.createElement("style");
+    style.textContent = STYLE;
+    shadow.appendChild(style);
+
+    var pill = document.createElement("div");
+    pill.className = "pill";
+
+    var spinner = document.createElement("div");
+    spinner.className = "spinner";
+
+    var text = document.createElement("span");
+    text.textContent = "Analyzing…";
+
+    pill.appendChild(spinner);
+    pill.appendChild(text);
+    shadow.appendChild(pill);
+
+    indicatorHost = h;
+  }
+
+  function hideIndicator() {
+    if (indicatorHost && indicatorHost.isConnected) {
+      indicatorHost.remove();
+    }
+    indicatorHost = null;
+  }
+
   function hide() {
     if (!host || !host.isConnected) return;
     if (host.__chatguardCleanup) host.__chatguardCleanup();
@@ -180,5 +228,10 @@
     }
   }
 
-  global.ChatGuardModal = { show: show, hide: hide };
+  global.ChatGuardModal = {
+    show: show,
+    showIndicator: showIndicator,
+    hideIndicator: hideIndicator,
+    hide: hide
+  };
 })(typeof globalThis !== "undefined" ? globalThis : this);

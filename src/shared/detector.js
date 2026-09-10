@@ -86,6 +86,7 @@
         "\\bi want to (?:die|kill myself|end my life|end it all|disappear forever)\\b",
         "\\bi don'?t want to (?:live|exist|be here|be alive) (?:anymore|any more)?\\b",
         "\\b(?:commit|committed|attempt(?:ed)?|consider(?:ing)?) suicide\\b",
+        "\\b(?:want to|wanna|going to|gonna|plan(?:ning)? to|think(?:ing)? (?:about|of)) (?:commit )?suicide\\b",
         "\\bsuicidal\\b",
         "\\bending my life\\b",
         "\\bend it all\\b",

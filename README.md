@@ -5,8 +5,10 @@ Humanities project. When you try to send a sensitive or emotional message to
 ChatGPT, Claude, or Gemini, ChatGuard intercepts the send and shows a
 confirm-before-send modal so you can pause and reflect before continuing.
 
-Runs **fully locally** — no API keys, no network calls, no logging, no
-telemetry. Detection is rule-based (regex) and entirely offline.
+Local by default — detection is a bundled offline rule engine with no API
+calls, logging, or telemetry. An optional **AI classifier** (DeepSeek) can be
+enabled for more contextual detection; when on, your message text is sent to
+DeepSeek's API for classification (and nothing is logged).
 
 ## Research context & ethics
 
@@ -56,6 +58,21 @@ them in the `CATEGORIES` array of `src/shared/detector.js`.
 5. **Send anyway** re-sends programmatically (by clicking the real send button
    under a one-shot bypass flag). **Edit message** dismisses the modal and
    refocuses the composer. `Esc` does the same as **Edit message**.
+
+### LLM detection (optional, Chromium)
+
+- Put a DeepSeek API key in `src/config.local.js` (gitignored) or paste it in
+  the popup, then enable **AI classifier**.
+- When on, every message is analyzed by the LLM for context and intent before
+  sending. A subtle "Analyzing…" pill shows while it runs, and only flagged
+  messages interrupt with the full nudge. Without the LLM, the local rules
+  decide.
+- On ChatGPT, attached files are scanned too: DOCX and plain text are converted
+  to text, PDFs are extracted on a best-effort basis, and filenames are always
+  included — so obvious PII (e.g. `passport.pdf`, `bank_statement.pdf`) is
+  flagged even when the text can't be read.
+- Runs in a service worker, so it needs a Chromium browser. Firefox and Safari
+  fall back to the local rules automatically.
 
 ## Project structure
 
