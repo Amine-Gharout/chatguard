@@ -1,5 +1,5 @@
 /**
- * ChatGuard — rule-based content detector.
+ * Critty — rule-based content detector.
  *
  * Generic engine: each category below is independent and ships a list of
  * word-boundary-aware regular expressions plus a match-count threshold.
@@ -174,7 +174,13 @@
         "\\bmy (?:dob|date of birth|ssn)\\b",
         "\\brouting number\\b",
         "\\baccount number\\b",
-        "\\bsecurity code\\b"
+        "\\bsecurity code\\b",
+        // Pasted document dumps: labeled fields (e.g. "Address: …", "IBAN: …").
+        "\\b(?:full name|address|home address|phone(?: number)?|email(?: address)?|date of birth|dob|passport(?: number)?|bank account(?: \\(iban\\))?|iban|social security(?: number)?|ssn|national insurance(?: number)?|account number|routing number|credit card(?: number)?|sort code)\\s*:",
+        // Raw data formats, even without labels.
+        "\\b[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}\\b",
+        "\\b[a-z]{2}\\d{2}(?:\\s?\\d){11,27}\\b",
+        "\\+\\d{1,3}(?:\\s?\\d){7,12}\\b"
       ]
     },
     {
@@ -262,7 +268,7 @@
   }
 
   var api = { CATEGORIES: CATEGORIES, detect: detect, normalize: normalize };
-  global.ChatGuardDetector = api;
+  global.CrittyDetector = api;
   if (typeof module !== "undefined" && module.exports) {
     module.exports = api;
   }

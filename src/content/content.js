@@ -1,5 +1,5 @@
 /**
- * ChatGuard — content script bootstrap.
+ * Critty — content script bootstrap.
  *
  * Intercepts the user-triggered send paths (Enter keydown + send-button click)
  * in the capture phase. In LLM mode every message is analyzed by the background
@@ -7,23 +7,28 @@
  * the check runs, and only flagged messages interrupt with the confirm modal.
  * Without the LLM, the local rule engine decides directly.
  *
- * Privacy: in LLM mode the message text is sent to DeepSeek for classification.
- * Rule-only mode is fully local.
+ * Privacy: in LLM mode the message text is sent to your local LLM for
+ * classification. Rule-only mode is fully local.
  */
 (function () {
   "use strict";
 
-  var Detector = globalThis.ChatGuardDetector;
-  var Dom = globalThis.ChatGuardDom;
-  var Modal = globalThis.ChatGuardModal;
-  var Settings = globalThis.ChatGuardSettings;
-  var Storage = globalThis.ChatGuardStorage;
-  var Files = globalThis.ChatGuardFiles;
+  var Detector = globalThis.CrittyDetector;
+  var Dom = globalThis.CrittyDom;
+  var Modal = globalThis.CrittyModal;
+  var Settings = globalThis.CrittySettings;
+  var Storage = globalThis.CrittyStorage;
+  var Files = globalThis.CrittyFiles;
 
   var settings = JSON.parse(JSON.stringify(Settings.DEFAULTS));
   var bypass = false;
   var checking = false;
   var checkToken = 0;
+
+  // Estimated resources saved when the user backs out of a "how to" query
+  // (also shown inside the how-to nudge).
+  var SAVED_KWH_PER_CANCEL = 0.01;
+  var SAVED_WATER_L_PER_CANCEL = 0.005;
 
   function mergeSettings(defaults, stored) {
     var merged = JSON.parse(JSON.stringify(defaults));
@@ -59,12 +64,36 @@
     bypass = true;
     var sent = Dom.sendMessage();
     if (!sent) {
-      console.warn("ChatGuard: could not programmatically send the message.");
+      console.warn("Critty: could not programmatically send the message.");
     }
   }
 
+  function howtoSavingsText() {
+    return (
+      "Estimated savings if you search Google instead: ⚡ ~" +
+      Math.round(SAVED_KWH_PER_CANCEL * 1000) +
+      " Wh · 💧 ~" +
+      Math.round(SAVED_WATER_L_PER_CANCEL * 1000) +
+      " mL of water."
+    );
+  }
+
   function editMessage() {
+    // The user went back to edit — drop cached attachment text so that if
+    // they remove the file, the next send won't re-flag it.
+    attachments.length = 0;
     Dom.focusComposer();
+  }
+
+  // Only backing out of a "how to" query counts as a saved resource.
+  function editHowToMessage() {
+    editMessage();
+    Storage.getLocal({ savedElectricityKwh: 0, savedWaterL: 0 }, function (items) {
+      Storage.setLocal({
+        savedElectricityKwh: (items.savedElectricityKwh || 0) + SAVED_KWH_PER_CANCEL,
+        savedWaterL: (items.savedWaterL || 0) + SAVED_WATER_L_PER_CANCEL
+      });
+    });
   }
 
   function categoryInfo(id) {
@@ -86,14 +115,20 @@
     var files = fileList ? Array.prototype.slice.call(fileList) : [];
     files.forEach(function (file) {
       if (!file || !file.name || file.size > 10000000) return; // skip > 10 MB
+      // Store the metadata immediately so the filename is always sent, then
+      // fill in the extracted text asynchronously. A fast send on Claude (no
+      // <form>, chips outside the composer parent) still sees the filename.
+      var entry = {
+        name: file.name || "attachment",
+        type: file.type || "",
+        size: file.size || 0,
+        text: ""
+      };
+      attachments.push(entry);
+      if (attachments.length > 8) attachments.shift();
       Files.extractText(file).then(function (text) {
-        attachments.push({
-          name: file.name || "attachment",
-          type: file.type || "",
-          size: file.size || 0,
-          text: text || ""
-        });
-        if (attachments.length > 8) attachments.shift();
+        entry.text = text || "";
+        console.log("[Critty] extracted " + file.name + " (" + String(text || "").length + " chars)");
       });
     });
   }
@@ -101,12 +136,14 @@
   function onFileChange(event) {
     var target = event.target;
     if (target && target.tagName === "INPUT" && target.type === "file") {
+      console.log("[Critty] file input change: " + (target.files ? target.files.length : 0) + " file(s)");
       rememberFiles(target.files);
     }
   }
 
   function onDrop(event) {
     if (event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length) {
+      console.log("[Critty] drop: " + event.dataTransfer.files.length + " file(s)");
       rememberFiles(event.dataTransfer.files);
     }
   }
@@ -114,25 +151,62 @@
   function onPaste(event) {
     var dt = event.clipboardData;
     if (dt && dt.files && dt.files.length) {
+      console.log("[Critty] paste: " + dt.files.length + " file(s)");
       rememberFiles(dt.files);
     }
   }
 
-  function currentAttachments() {
-    if (!attachments.length) return [];
-    var containerText = "";
+  function detectFilenameAttachments() {
+    var names = [];
     try {
       var composer = Dom.getComposer();
-      var container = composer ? (composer.closest("form") || composer.parentElement) : null;
-      containerText = container ? (container.innerText || "").toLowerCase() : "";
+      if (!composer) return names;
+
+      // ChatGPT wraps the composer in a <form>; Claude and Gemini do not, and
+      // render the attachment chips outside the composer's immediate parent.
+      // Walk up to the nearest ancestor that also holds the hidden file input
+      // (that is where the chips live).
+      var container = composer.closest("form, fieldset");
+      if (!container) {
+        var node = composer;
+        for (var i = 0; i < 12 && node; i++) {
+          node = node.parentElement;
+          if (!node) break;
+          if (node.querySelector && node.querySelector('input[type="file"]')) {
+            container = node;
+            break;
+          }
+        }
+      }
+      if (!container) container = composer.parentElement;
+
+      var text = container ? (container.innerText || "") : "";
+      var re = /[^\s()[\]"']+\.(?:pdf|docx?|txt|md|csv|json|xml|html?|xlsx?|pptx?|rtf|png|jpe?g)/gi;
+      var m;
+      while ((m = re.exec(text)) !== null) {
+        var name = m[0].toLowerCase();
+        if (names.indexOf(name) === -1) names.push(name);
+      }
     } catch (err) {
-      containerText = "";
+      /* ignore */
     }
-    var visible = attachments.filter(function (a) {
-      var name = (a.name || "").toLowerCase();
-      return name && containerText.indexOf(name) !== -1;
+    return names;
+  }
+
+  function currentAttachments() {
+    var list = attachments.slice();
+    detectFilenameAttachments().forEach(function (name) {
+      var exists = list.some(function (a) {
+        return (a.name || "").toLowerCase() === name;
+      });
+      if (!exists) list.push({ name: name, type: "", size: 0, text: "" });
     });
-    return (visible.length ? visible : attachments).slice(-5);
+    var result = list.slice(-5);
+    console.log(
+      "[Critty] sending with " + result.length + " attachment(s): " +
+        result.map(function (a) { return a.name; }).join(", ")
+    );
+    return result;
   }
 
   function matchesFromLLM(result) {
@@ -192,7 +266,7 @@
 
       try {
         chrome.runtime.sendMessage(
-          { type: "chatguard_classify", text: text, attachments: attachments || [] },
+          { type: "critty_classify", text: text, attachments: attachments || [] },
           function (response) {
             if (done) return;
             done = true;
@@ -246,6 +320,27 @@
     var text = Dom.readComposerText();
     if (!text) return;
 
+    // "How to" queries get an awareness nudge directly (no LLM round-trip).
+    if (/\bhow to\b/i.test(text)) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      Modal.show({
+        matches: [
+          {
+            category: "howto",
+            label: "How-to query",
+            guidance: "",
+            matchedPhrases: [],
+            savings: howtoSavingsText()
+          }
+        ],
+        onSendAnyway: sendNow,
+        onEdit: editHowToMessage
+      });
+      return;
+    }
+
     var hits = rulesMatches(text);
 
     // Rule-only mode: block only when the local rules flag something.
@@ -276,7 +371,7 @@
   }
 
   function init() {
-    console.log("[ChatGuard] loaded — LLM analysis + attachment scanning");
+    console.log("[Critty] loaded — LLM analysis + attachment scanning");
     loadSettings();
     document.addEventListener("keydown", handleEvent, true);
     document.addEventListener("click", handleEvent, true);

@@ -19,7 +19,7 @@ function test(name, fn) {
   }
 }
 
-console.log("ChatGuard detector tests");
+console.log("Critty detector tests");
 
 test("detects 'I love you'", () => {
   assert.ok(categoriesOf("I love you").includes("romantic"));
@@ -83,6 +83,40 @@ test("detects a hateful phrase", () => {
 
 test("detects personal info disclosure", () => {
   assert.ok(categoriesOf("my password is hunter2").includes("personal_info"));
+});
+
+test("detects pasted personal-info document", () => {
+  const text = [
+    "Critty test document",
+    "",
+    "Full name: Alexandra Dupont",
+    "Address: 47 Rue de la Paix, 75002 Paris, France",
+    "Phone: +33 6 12 34 56 78",
+    "Email: alexandra.dupont@example.com",
+    "Date of birth: 14 March 1991",
+    "Passport number: 12AB34567",
+    "Bank account (IBAN): FR76 3000 6000 0012 3456 7890 189",
+    "Social security number: 2 91 03 75 116 005 42"
+  ].join("\n");
+  assert.ok(categoriesOf(text).includes("personal_info"));
+});
+
+test("detects an email address", () => {
+  assert.ok(
+    categoriesOf("reach me at alexandra.dupont@example.com").includes("personal_info")
+  );
+});
+
+test("detects an IBAN", () => {
+  assert.ok(
+    categoriesOf("IBAN: FR76 3000 6000 0012 3456 7890 189").includes("personal_info")
+  );
+});
+
+test("detects an international phone number", () => {
+  assert.ok(
+    categoriesOf("Call me on +33 6 12 34 56 78").includes("personal_info")
+  );
 });
 
 test("detects a dangerous activity phrase", () => {

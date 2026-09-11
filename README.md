@@ -1,18 +1,19 @@
-# ChatGuard — ChatGPT Send Nudge (CDH Demo)
+# Critty — ChatGPT Send Nudge (CDH Demo)
 
-A cross-browser (Manifest V3) extension prototype for a Cambridge Digital
+A Chromium (Manifest V3) extension prototype for a Cambridge Digital
 Humanities project. When you try to send a sensitive or emotional message to
-ChatGPT, Claude, or Gemini, ChatGuard intercepts the send and shows a
+ChatGPT, Claude, or Gemini, Critty intercepts the send and shows a
 confirm-before-send modal so you can pause and reflect before continuing.
 
 Local by default — detection is a bundled offline rule engine with no API
-calls, logging, or telemetry. An optional **AI classifier** (DeepSeek) can be
-enabled for more contextual detection; when on, your message text is sent to
-DeepSeek's API for classification (and nothing is logged).
+calls, logging, or telemetry. An optional **AI classifier** can be enabled for
+more contextual detection; when on, your message text is sent to a local LLM
+(Ollama) running on your own machine for classification (and nothing is
+logged).
 
 ## Research context & ethics
 
-ChatGuard is a working prototype from a Cambridge Digital Humanities project
+Critty is a working prototype from a Cambridge Digital Humanities project
 exploring how people form emotional attachments to AI chatbots, and whether a
 light-touch "nudge" can prompt reflection before sharing intimate content.
 
@@ -61,8 +62,9 @@ them in the `CATEGORIES` array of `src/shared/detector.js`.
 
 ### LLM detection (optional, Chromium)
 
-- Put a DeepSeek API key in `src/config.local.js` (gitignored) or paste it in
-  the popup, then enable **AI classifier**.
+- Set the **base URL** (default `http://127.0.0.1:11434/v1/chat/completions`)
+  and **model** (e.g. `qwen2.5:7b-instruct`) in the popup. Critty sends the
+  message to your local Ollama server only.
 - When on, every message is analyzed by the LLM for context and intent before
   sending. A subtle "Analyzing…" pill shows while it runs, and only flagged
   messages interrupt with the full nudge. Without the LLM, the local rules
@@ -71,8 +73,8 @@ them in the `CATEGORIES` array of `src/shared/detector.js`.
   to text, PDFs are extracted on a best-effort basis, and filenames are always
   included — so obvious PII (e.g. `passport.pdf`, `bank_statement.pdf`) is
   flagged even when the text can't be read.
-- Runs in a service worker, so it needs a Chromium browser. Firefox and Safari
-  fall back to the local rules automatically.
+- Runs in a service worker, so it needs a Chromium browser (Chrome, Brave, or
+  Edge).
 
 ## Project structure
 
@@ -82,7 +84,7 @@ icons/                            generated heart icons (icon16/48/128.png)
 src/
   shared/
     settings.js                   shared settings schema
-    storage.js                    cross-browser storage wrapper (Chrome/Firefox/Safari)
+    storage.js                    storage wrapper (chrome.storage + browser fallback)
     detector.js                   rule engine + category rules
   content/
     dom.js                        ChatGPT DOM helpers (resilient selectors)
@@ -96,45 +98,114 @@ tests/
   detector.test.js                Node unit tests for the detector
 ```
 
-## Supported browsers & install
+## Installation — step by step
 
-| Browser | Install method |
+Critty runs in **Chromium browsers only** — Google Chrome, Brave, or Microsoft
+Edge — on any desktop OS. There is no installer or store build: you load the
+source folder straight into your browser. The steps below cover macOS,
+Windows, and Linux; all three end in the same Chromium "Load unpacked" step,
+and only the terminal commands differ.
+
+### 0. Prerequisites
+
+- A Chromium browser (required): **Google Chrome**, **Brave**, or
+  **Microsoft Edge** (any recent version). Critty only runs in Chromium.
+- **Ollama** (optional) — only needed for the AI classifier. The rule engine
+  runs with no dependencies at all.
+- **Git** (optional) — only needed if you clone the repository instead of
+  downloading a ZIP.
+
+### 1. Get the code
+
+Pick one method.
+
+**Option A — Git (recommended):**
+
+```sh
+git clone <your-repo-url> critty
+cd critty
+```
+
+Replace `<your-repo-url>` with the URL of your copy of this repository. If you
+already have the folder, skip to step 2.
+
+**Option B — Download ZIP:**
+
+1. Download the repository as a ZIP file.
+2. Unzip it and remember the path of the extracted `critty` folder.
+
+### 2. Install a Chromium browser
+
+| OS | How |
 | --- | --- |
-| Chrome / Brave / Edge (Chromium) | Load unpacked |
-| Firefox | Temporary add-on (`about:debugging`) |
-| Safari (macOS) | Xcode build via `safari-web-extension-converter` |
+| macOS | Download **Chrome** or **Brave** and drag it to `Applications`. |
+| Windows | Download **Chrome**, **Brave**, or **Edge** and run the installer. Edge is usually pre-installed. |
+| Linux | `sudo apt install chromium-browser` (Debian/Ubuntu) or `sudo dnf install chromium` (Fedora). |
 
-### Chrome / Brave / Edge
+### 3. (Optional) Install Ollama for the AI classifier
 
-1. Open the extensions page: `chrome://extensions`, `brave://extensions`, or
-   `edge://extensions`.
-2. Enable **Developer mode** (top-right toggle).
-3. Click **Load unpacked** and select this folder (`/mnt/data/Documents/chatguard`).
-4. Open [chatgpt.com](https://chatgpt.com), [claude.ai](https://claude.ai), or
-   [gemini.google.com](https://gemini.google.com) and start a chat.
+The rule engine works without Ollama. Install it only if you want the
+context-aware LLM classifier.
 
-### Firefox
+**macOS**
 
-1. Open `about:debugging#/runtime/this-firefox`.
-2. Click **Load Temporary Add-on…** and select `manifest.json` in this folder.
-3. The extension runs for this session only (it's removed when Firefox closes —
-   normal for unsigned testing).
+```sh
+brew install ollama
+ollama serve
+# in a second terminal:
+ollama pull qwen2.5:7b-instruct
+```
 
-### Safari (macOS)
+**Windows**
 
-Safari has no load-unpacked mode; it needs an Xcode wrapper. On a Mac with
-Xcode installed:
+1. Download the installer from <https://ollama.com/download> and run it.
+2. Open PowerShell and pull the model:
 
-1. `xcrun safari-web-extension-converter /mnt/data/Documents/chatguard`
-   (add `--project-location .` to keep the generated project here).
-2. Open the generated Xcode project, choose your signing team (a free Personal
-   Team is fine), and run the macOS app target — it registers the extension.
-3. In Safari: **Settings → Advanced → enable "Show features for web developers"**,
-   then in the **Develop** menu enable **Allow Unsigned Extensions**.
-4. Turn on **ChatGuard** in **Safari → Settings → Extensions**.
+   ```powershell
+   ollama pull qwen2.5:7b-instruct
+   ```
 
-> Requires Safari 16.4+ (Manifest V3 `action`). The code already uses a
-> `browser`/`chrome` storage wrapper, so no changes are needed to run.
+**Linux**
+
+```sh
+curl -fsSL https://ollama.com/install.sh | sh
+ollama serve &
+ollama pull qwen2.5:7b-instruct
+```
+
+Any OpenAI-compatible local server works — just point Critty's **Base URL**
+at it in the popup.
+
+### 4. Load the extension in your Chromium browser
+
+This step is identical on macOS, Windows, and Linux.
+
+1. Open the extensions page of whichever Chromium browser you installed in
+   step 2:
+   - Chrome: `chrome://extensions`
+   - Brave: `brave://extensions`
+   - Edge: `edge://extensions`
+2. Toggle on **Developer mode** (usually a switch in the top-right corner).
+3. Click **Load unpacked** and select the `critty` folder (the one containing
+   `manifest.json`).
+4. Pin Critty from the toolbar puzzle-piece menu so the popup is easy to reach.
+
+### 5. Turn on the AI classifier (optional)
+
+1. Click the Critty toolbar icon to open the popup.
+2. Check **AI classifier (Local LLM)**.
+3. Confirm the defaults — **Base URL** `http://127.0.0.1:11434/v1/chat/completions`
+   and **Model** `qwen2.5:7b-instruct` — or set your own local endpoint.
+4. Make sure Ollama is running (`ollama serve`).
+
+### 6. Verify it works
+
+1. Open [chatgpt.com](https://chatgpt.com), [claude.ai](https://claude.ai), or
+   [gemini.google.com](https://gemini.google.com).
+2. Type a neutral message (e.g. `Summarize the paper for me`) and press Enter —
+   it sends normally.
+3. Type `I love you` and press Enter — the Critty modal appears and nothing is
+   sent. See **Demo script** below for the full walkthrough.
 
 ## Demo script
 
@@ -175,7 +246,7 @@ hostility, private-info disclosure):
 2. Default it on in `src/shared/settings.js` (`categories.distress: true`).
 3. Re-run `node tests/detector.test.js` with new cases.
 
-The popup reads the category list from `ChatGuardDetector.CATEGORIES`, so the
+The popup reads the category list from `CrittyDetector.CATEGORIES`, so the
 new toggle appears automatically. No other code changes required.
 
 ## Notes & limitations
@@ -196,6 +267,6 @@ new toggle appears automatically. No other code changes required.
 
 ## Out of scope (by design)
 
-LLM/API-based classification, telemetry, and store packaging/signing
-(Chrome Web Store, AMO, or App Store). Firefox and Safari run via the methods
-above but are not packaged or signed here.
+Cloud API-based classification, telemetry, and store packaging/signing
+(Chrome Web Store). Firefox and Safari are not supported — Critty is a
+Chromium-only extension.

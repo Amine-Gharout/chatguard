@@ -1,5 +1,5 @@
 /**
- * ChatGuard — shared settings schema.
+ * Critty — shared settings schema.
  * Loaded as a classic script (content script + popup) and attached to
  * globalThis. No build step.
  */
@@ -21,5 +21,5 @@
     }
   };
 
-  global.ChatGuardSettings = { DEFAULTS: DEFAULTS };
+  global.CrittySettings = { DEFAULTS: DEFAULTS };
 })(typeof globalThis !== "undefined" ? globalThis : this);

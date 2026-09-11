@@ -32,7 +32,7 @@ function crc32(buf) {
   }
   return (c ^ 0xffffffff) >>> 0;
 }
-
+    
 function chunk(type, data) {
   const len = Buffer.alloc(4);
   len.writeUInt32BE(data.length, 0);

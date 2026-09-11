@@ -1,26 +1,20 @@
 /**
- * ChatGuard — background classifier (Chromium).
+ * Critty — background classifier (Chromium).
  *
- * Classifies a message the user is about to send, using DeepSeek's
- * OpenAI-compatible chat completions API. The API key is read from
- * chrome.storage.local (set in the popup) or from src/config.local.js
- * (gitignored). Runs as an MV3 service worker, which is required to bypass
- * the API's CORS restrictions.
+ * Classifies a message the user is about to send using a local,
+ * OpenAI-compatible server (e.g. Ollama). The endpoint and model are
+ * configured in the popup. Runs as an MV3 service worker, which is required
+ * to bypass the API's CORS restrictions.
  */
 "use strict";
 
-const DEEPSEEK_URL = "https://api.deepseek.com/chat/completions";
-const MODEL = "deepseek-chat";
+const LOCAL_DEFAULT_URL = "http://127.0.0.1:11434/v1/chat/completions";
+const LOCAL_DEFAULT_MODEL = "qwen2.5:7b-instruct";
 
-let configApiKey = "";
-try {
-  importScripts("../config.local.js");
-} catch (e) {
-  // Config file absent — the key may still come from storage.
-}
-if (self.ChatGuardConfig && self.ChatGuardConfig.deepseekApiKey) {
-  configApiKey = String(self.ChatGuardConfig.deepseekApiKey);
-}
+// Resource-usage estimates (illustrative, not metered): ~5 kWh per 1,000,000
+// tokens of inference, and ~0.5 L of water per kWh for data-centre cooling.
+const KWH_PER_TOKEN = 5e-6;
+const WATER_L_PER_KWH = 0.5;
 
 const SYSTEM_PROMPT =
   "You classify a message a user is about to send to an AI chatbot, to help " +
@@ -50,9 +44,42 @@ function storageGet(defaults) {
   });
 }
 
-async function getApiKey() {
-  const items = await storageGet({ apiKey: "" });
-  return (items && items.apiKey) || configApiKey;
+function storageSet(items) {
+  return new Promise((resolve) => {
+    try {
+      chrome.storage.local.set(items, resolve);
+    } catch (e) {
+      resolve();
+    }
+  });
+}
+
+async function accumulateUsage(totalTokens) {
+  if (!(totalTokens > 0)) return;
+  const kwh = totalTokens * KWH_PER_TOKEN;
+  const waterL = kwh * WATER_L_PER_KWH;
+  const items = await storageGet({ usageElectricityKwh: 0, usageWaterL: 0 });
+  const next = {
+    usageElectricityKwh: (items.usageElectricityKwh || 0) + kwh,
+    usageWaterL: (items.usageWaterL || 0) + waterL
+  };
+  console.log(
+    "[Critty] +usage tokens=" + totalTokens +
+    " kWh=" + next.usageElectricityKwh.toFixed(6) +
+    " waterL=" + next.usageWaterL.toFixed(6)
+  );
+  await storageSet(next);
+}
+
+async function getConfig() {
+  const items = await storageGet({
+    localBaseUrl: LOCAL_DEFAULT_URL,
+    localModel: LOCAL_DEFAULT_MODEL
+  });
+  return {
+    localBaseUrl: items.localBaseUrl || LOCAL_DEFAULT_URL,
+    localModel: items.localModel || LOCAL_DEFAULT_MODEL
+  };
 }
 
 function normalize(result) {
@@ -86,19 +113,14 @@ function buildUserContent(text, attachments) {
 }
 
 async function classify(text, attachments) {
-  const apiKey = await getApiKey();
-  if (!apiKey) return { error: "no_api_key" };
-
+  const cfg = await getConfig();
   const userContent = buildUserContent(text, attachments);
 
-  const res = await fetch(DEEPSEEK_URL, {
+  const res = await fetch(cfg.localBaseUrl, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + apiKey
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: MODEL,
+      model: cfg.localModel,
       temperature: 0,
       max_tokens: 300,
       response_format: { type: "json_object" },
@@ -112,6 +134,8 @@ async function classify(text, attachments) {
   if (!res.ok) return { error: "http_" + res.status };
 
   const data = await res.json();
+  await accumulateUsage(data && data.usage && data.usage.total_tokens);
+
   const content =
     data &&
     data.choices &&
@@ -129,7 +153,7 @@ async function classify(text, attachments) {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (!message || message.type !== "chatguard_classify") return false;
+  if (!message || message.type !== "critty_classify") return false;
   classify(String(message.text || ""), message.attachments)
     .then(sendResponse)
     .catch((err) => sendResponse({ error: String(err) }));

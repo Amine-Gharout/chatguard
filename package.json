@@ -1,5 +1,5 @@
 {
-  "name": "chatguard",
+  "name": "critty",
   "version": "0.1.0",
   "private": true,
   "description": "Cross-browser extension that nudges users before sending sensitive/emotional messages to AI chatbots (ChatGPT, Claude, Gemini). Cambridge Digital Humanities research prototype.",

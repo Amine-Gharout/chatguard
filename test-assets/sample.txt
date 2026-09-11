@@ -1,0 +1,12 @@
+Critty test document
+
+Full name: Alexandra Dupont
+Address: 47 Rue de la Paix, 75002 Paris, France
+Phone: +33 6 12 34 56 78
+Email: alexandra.dupont@example.com
+Date of birth: 14 March 1991
+Passport number: 12AB34567
+Bank account (IBAN): FR76 3000 6000 0012 3456 7890 189
+Social security number: 2 91 03 75 116 005 42
+
+This document contains sample personal data for testing Critty.

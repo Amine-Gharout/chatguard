@@ -3,35 +3,61 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ChatGuard</title>
+    <title>Critty</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
     <header>
-      <h1>ChatGuard</h1>
-      <span class="subtitle">Send-nudge prototype · CDH demo</span>
+      <div class="brand">
+        <span class="logo">🛡️</span>
+        <div class="brand-text">
+          <h1>Critty</h1>
+          <span class="subtitle">Send-nudge prototype · CDH demo</span>
+        </div>
+      </div>
     </header>
 
-    <label class="row master">
-      <span>Enable nudges</span>
-      <input type="checkbox" id="master-toggle" />
-    </label>
+    <div class="switch-list">
+      <label class="row">
+        <span>Enable nudges</span>
+        <input type="checkbox" id="master-toggle" />
+      </label>
+      <label class="row">
+        <span>AI classifier (Local LLM)</span>
+        <input type="checkbox" id="llm-toggle" />
+      </label>
+    </div>
 
-    <label class="row">
-      <span>AI classifier (DeepSeek)</span>
-      <input type="checkbox" id="llm-toggle" />
-    </label>
-
-    <fieldset>
-      <legend>Warn about</legend>
+    <section class="card">
+      <h2>Warn about</h2>
       <div id="category-list"></div>
-    </fieldset>
+    </section>
 
-    <fieldset>
-      <legend>DeepSeek API key (stored locally)</legend>
-      <input type="password" id="api-key" class="key-input" placeholder="sk-…" autocomplete="off" spellcheck="false" />
-      <p class="footnote">Optional. When the AI classifier is on, your message text is sent to DeepSeek for classification.</p>
-    </fieldset>
+    <section class="card">
+      <h2>Local LLM</h2>
+      <label class="field">
+        <span>Base URL</span>
+        <input type="text" id="local-url" class="key-input" placeholder="http://127.0.0.1:11434/v1/chat/completions" />
+      </label>
+      <label class="field">
+        <span>Model</span>
+        <input type="text" id="local-model" class="key-input" placeholder="qwen2.5:7b-instruct" />
+      </label>
+      <p class="hint">Needs Ollama (or a compatible OpenAI server) running locally. Your message text is analyzed on your own machine.</p>
+    </section>
+
+    <section class="card">
+      <h2>Resource usage <span class="tag">est.</span></h2>
+      <div class="stat"><span>⚡ Electricity</span><strong id="usage-kwh">0 Wh</strong></div>
+      <div class="stat"><span>💧 Water</span><strong id="usage-water">0 mL</strong></div>
+      <button type="button" id="usage-reset" class="btn">Reset</button>
+    </section>
+
+    <section class="card">
+      <h2>Resources saved <span class="tag">est.</span></h2>
+      <div class="stat saved"><span>⚡ Electricity</span><strong id="saved-kwh">0 Wh</strong></div>
+      <div class="stat saved"><span>💧 Water</span><strong id="saved-water">0 mL</strong></div>
+    </section>
 
     <p class="footnote">Rule-based detection is local. Nothing is stored or logged.</p>
 

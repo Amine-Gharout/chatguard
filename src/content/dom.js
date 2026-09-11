@@ -1,9 +1,9 @@
 /**
- * ChatGuard — ChatGPT DOM helpers.
+ * Critty — ChatGPT DOM helpers.
  *
  * ChatGPT is a React SPA whose markup changes between releases, so every
  * lookup walks a list of candidate selectors and caches the first live hit.
- * Attached to globalThis as ChatGuardDom.
+ * Attached to globalThis as CrittyDom.
  */
 (function (global) {
   "use strict";
@@ -127,7 +127,7 @@
     return false;
   }
 
-  global.ChatGuardDom = {
+  global.CrittyDom = {
     getComposer: getComposer,
     getSendButton: getSendButton,
     readComposerText: readComposerText,
