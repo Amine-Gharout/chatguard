@@ -1,9 +1,9 @@
 /**
- * Critty — in-page confirm modal.
+ * ChatGuard — in-page confirm modal.
  *
  * Rendered inside a Shadow DOM host so ChatGPT's own styles cannot leak in.
  * Blocks the message until the user chooses to send anyway or go back and
- * edit. Attached to globalThis as CrittyModal.
+ * edit. Attached to globalThis as ChatGuardModal.
  */
 (function (global) {
   "use strict";
@@ -73,16 +73,16 @@
     ".btn.secondary { background: #3a3a3a; color: #ececec; }" +
     ".btn.primary { background: #a259ff; color: #ffffff; }" +
     ".btn:focus-visible { outline: 2px solid #ffffff; outline-offset: 2px; }" +
-    ".spinner { width: 18px; height: 18px; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.2); border-top-color: #a259ff; border-radius: 50%; animation: critty-spin 0.8s linear infinite; }" +
+    ".spinner { width: 18px; height: 18px; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.2); border-top-color: #a259ff; border-radius: 50%; animation: chatguard-spin 0.8s linear infinite; }" +
     ".pill { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: #1f1f1f; color: #ececec; border: 1px solid #3a3a3a; box-shadow: 0 4px 16px rgba(0,0,0,0.35); font-size: 13px; pointer-events: none; }" +
-    "@keyframes critty-spin { to { transform: rotate(360deg); } }" +
+    "@keyframes chatguard-spin { to { transform: rotate(360deg); } }" +
     ".cat-reason { margin: 4px 0 0; font-size: 13px; line-height: 1.45; color: #b8b8b8; font-style: italic; }" +
     ".cat-savings { margin: 6px 0 0; padding: 6px 8px; background: rgba(63,185,80,0.12); border: 1px solid rgba(63,185,80,0.25); border-radius: 6px; font-size: 12px; color: #3fb950; }";
 
   function createHost() {
     if (host && host.isConnected) return host;
     var h = document.createElement("div");
-    h.id = "critty-modal-host";
+    h.id = "chatguard-modal-host";
     h.style.cssText =
       "all: initial; position: fixed; inset: 0; z-index: 2147483647;";
     document.documentElement.appendChild(h);
@@ -106,10 +106,10 @@
     dialog.className = "dialog";
     dialog.setAttribute("role", "dialog");
     dialog.setAttribute("aria-modal", "true");
-    dialog.setAttribute("aria-labelledby", "critty-title");
+    dialog.setAttribute("aria-labelledby", "chatguard-title");
 
     var title = document.createElement("h2");
-    title.id = "critty-title";
+    title.id = "chatguard-title";
     title.className = "title";
     title.textContent = "Before you send…";
 
@@ -118,10 +118,10 @@
     var intro = document.createElement("p");
     intro.className = "intro";
     intro.textContent = matches.length
-      ? "Critty detected: " +
+      ? "ChatGuard detected: " +
         matches.map(function (m) { return m.label; }).join(", ") +
         ". Take a moment before continuing."
-      : "Critty flagged this message. Take a moment before continuing.";
+      : "ChatGuard flagged this message. Take a moment before continuing.";
 
     dialog.appendChild(title);
     dialog.appendChild(intro);
@@ -230,7 +230,7 @@
     }
     shadow.addEventListener("keydown", onKeydown, true);
 
-    root.__crittyCleanup = function () {
+    root.__chatguardCleanup = function () {
       shadow.removeEventListener("keydown", onKeydown, true);
     };
 
@@ -240,7 +240,7 @@
   function showIndicator() {
     if (indicatorHost && indicatorHost.isConnected) return;
     var h = document.createElement("div");
-    h.id = "critty-indicator-host";
+    h.id = "chatguard-indicator-host";
     h.style.cssText =
       "all: initial; position: fixed; top: 0; left: 0; width: 0; height: 0; z-index: 2147483647; pointer-events: none;";
     document.documentElement.appendChild(h);
@@ -275,7 +275,7 @@
 
   function hide() {
     if (!host || !host.isConnected) return;
-    if (host.__crittyCleanup) host.__crittyCleanup();
+    if (host.__chatguardCleanup) host.__chatguardCleanup();
     host.remove();
     host = null;
     if (
@@ -287,7 +287,7 @@
     }
   }
 
-  global.CrittyModal = {
+  global.ChatGuardModal = {
     show: show,
     showIndicator: showIndicator,
     hideIndicator: hideIndicator,

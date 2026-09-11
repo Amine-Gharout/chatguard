@@ -1,5 +1,5 @@
 /**
- * Critty — background classifier (Chromium).
+ * ChatGuard — background classifier (Chromium).
  *
  * Classifies a message the user is about to send using a local,
  * OpenAI-compatible server (e.g. Ollama). The endpoint and model are
@@ -64,7 +64,7 @@ async function accumulateUsage(totalTokens) {
     usageWaterL: (items.usageWaterL || 0) + waterL
   };
   console.log(
-    "[Critty] +usage tokens=" + totalTokens +
+    "[ChatGuard] +usage tokens=" + totalTokens +
     " kWh=" + next.usageElectricityKwh.toFixed(6) +
     " waterL=" + next.usageWaterL.toFixed(6)
   );
@@ -153,7 +153,7 @@ async function classify(text, attachments) {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (!message || message.type !== "critty_classify") return false;
+  if (!message || message.type !== "chatguard_classify") return false;
   classify(String(message.text || ""), message.attachments)
     .then(sendResponse)
     .catch((err) => sendResponse({ error: String(err) }));

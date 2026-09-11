@@ -1,8 +1,8 @@
-# Critty — ChatGPT Send Nudge (CDH Demo)
+# ChatGuard — ChatGPT Send Nudge (CDH Demo)
 
 A Chromium (Manifest V3) extension prototype for a Cambridge Digital
 Humanities project. When you try to send a sensitive or emotional message to
-ChatGPT, Claude, or Gemini, Critty intercepts the send and shows a
+ChatGPT, Claude, or Gemini, ChatGuard intercepts the send and shows a
 confirm-before-send modal so you can pause and reflect before continuing.
 
 Local by default — detection is a bundled offline rule engine with no API
@@ -13,7 +13,7 @@ logged).
 
 ## Research context & ethics
 
-Critty is a working prototype from a Cambridge Digital Humanities project
+ChatGuard is a working prototype from a Cambridge Digital Humanities project
 exploring how people form emotional attachments to AI chatbots, and whether a
 light-touch "nudge" can prompt reflection before sharing intimate content.
 
@@ -63,7 +63,7 @@ them in the `CATEGORIES` array of `src/shared/detector.js`.
 ### LLM detection (optional, Chromium)
 
 - Set the **base URL** (default `http://127.0.0.1:11434/v1/chat/completions`)
-  and **model** (e.g. `qwen2.5:7b-instruct`) in the popup. Critty sends the
+  and **model** (e.g. `qwen2.5:7b-instruct`) in the popup. ChatGuard sends the
   message to your local Ollama server only.
 - When on, every message is analyzed by the LLM for context and intent before
   sending. A subtle "Analyzing…" pill shows while it runs, and only flagged
@@ -100,7 +100,7 @@ tests/
 
 ## Installation — step by step
 
-Critty runs in **Chromium browsers only** — Google Chrome, Brave, or Microsoft
+ChatGuard runs in **Chromium browsers only** — Google Chrome, Brave, or Microsoft
 Edge — on any desktop OS. There is no installer or store build: you load the
 source folder straight into your browser. The steps below cover macOS,
 Windows, and Linux; all three end in the same Chromium "Load unpacked" step,
@@ -109,7 +109,7 @@ and only the terminal commands differ.
 ### 0. Prerequisites
 
 - A Chromium browser (required): **Google Chrome**, **Brave**, or
-  **Microsoft Edge** (any recent version). Critty only runs in Chromium.
+  **Microsoft Edge** (any recent version). ChatGuard only runs in Chromium.
 - **Ollama** (optional) — only needed for the AI classifier. The rule engine
   runs with no dependencies at all.
 - **Git** (optional) — only needed if you clone the repository instead of
@@ -122,8 +122,8 @@ Pick one method.
 **Option A — Git (recommended):**
 
 ```sh
-git clone <your-repo-url> critty
-cd critty
+git clone <your-repo-url> chatguard
+cd chatguard
 ```
 
 Replace `<your-repo-url>` with the URL of your copy of this repository. If you
@@ -132,7 +132,7 @@ already have the folder, skip to step 2.
 **Option B — Download ZIP:**
 
 1. Download the repository as a ZIP file.
-2. Unzip it and remember the path of the extracted `critty` folder.
+2. Unzip it and remember the path of the extracted `chatguard` folder.
 
 ### 2. Install a Chromium browser
 
@@ -173,7 +173,7 @@ ollama serve &
 ollama pull qwen2.5:7b-instruct
 ```
 
-Any OpenAI-compatible local server works — just point Critty's **Base URL**
+Any OpenAI-compatible local server works — just point ChatGuard's **Base URL**
 at it in the popup.
 
 ### 4. Load the extension in your Chromium browser
@@ -186,13 +186,13 @@ This step is identical on macOS, Windows, and Linux.
    - Brave: `brave://extensions`
    - Edge: `edge://extensions`
 2. Toggle on **Developer mode** (usually a switch in the top-right corner).
-3. Click **Load unpacked** and select the `critty` folder (the one containing
+3. Click **Load unpacked** and select the `chatguard` folder (the one containing
    `manifest.json`).
-4. Pin Critty from the toolbar puzzle-piece menu so the popup is easy to reach.
+4. Pin ChatGuard from the toolbar puzzle-piece menu so the popup is easy to reach.
 
 ### 5. Turn on the AI classifier (optional)
 
-1. Click the Critty toolbar icon to open the popup.
+1. Click the ChatGuard toolbar icon to open the popup.
 2. Check **AI classifier (Local LLM)**.
 3. Confirm the defaults — **Base URL** `http://127.0.0.1:11434/v1/chat/completions`
    and **Model** `qwen2.5:7b-instruct` — or set your own local endpoint.
@@ -204,7 +204,7 @@ This step is identical on macOS, Windows, and Linux.
    [gemini.google.com](https://gemini.google.com).
 2. Type a neutral message (e.g. `Summarize the paper for me`) and press Enter —
    it sends normally.
-3. Type `I love you` and press Enter — the Critty modal appears and nothing is
+3. Type `I love you` and press Enter — the ChatGuard modal appears and nothing is
    sent. See **Demo script** below for the full walkthrough.
 
 ## Demo script
@@ -246,7 +246,7 @@ hostility, private-info disclosure):
 2. Default it on in `src/shared/settings.js` (`categories.distress: true`).
 3. Re-run `node tests/detector.test.js` with new cases.
 
-The popup reads the category list from `CrittyDetector.CATEGORIES`, so the
+The popup reads the category list from `ChatGuardDetector.CATEGORIES`, so the
 new toggle appears automatically. No other code changes required.
 
 ## Notes & limitations
@@ -268,5 +268,5 @@ new toggle appears automatically. No other code changes required.
 ## Out of scope (by design)
 
 Cloud API-based classification, telemetry, and store packaging/signing
-(Chrome Web Store). Firefox and Safari are not supported — Critty is a
+(Chrome Web Store). Firefox and Safari are not supported — ChatGuard is a
 Chromium-only extension.

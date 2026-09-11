@@ -1,5 +1,5 @@
 /**
- * Critty — rule-based content detector.
+ * ChatGuard — rule-based content detector.
  *
  * Generic engine: each category below is independent and ships a list of
  * word-boundary-aware regular expressions plus a match-count threshold.
@@ -268,7 +268,7 @@
   }
 
   var api = { CATEGORIES: CATEGORIES, detect: detect, normalize: normalize };
-  global.CrittyDetector = api;
+  global.ChatGuardDetector = api;
   if (typeof module !== "undefined" && module.exports) {
     module.exports = api;
   }

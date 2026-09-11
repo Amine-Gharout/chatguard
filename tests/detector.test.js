@@ -19,7 +19,7 @@ function test(name, fn) {
   }
 }
 
-console.log("Critty detector tests");
+console.log("ChatGuard detector tests");
 
 test("detects 'I love you'", () => {
   assert.ok(categoriesOf("I love you").includes("romantic"));
@@ -87,7 +87,7 @@ test("detects personal info disclosure", () => {
 
 test("detects pasted personal-info document", () => {
   const text = [
-    "Critty test document",
+    "ChatGuard test document",
     "",
     "Full name: Alexandra Dupont",
     "Address: 47 Rue de la Paix, 75002 Paris, France",

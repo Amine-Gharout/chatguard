@@ -1,5 +1,5 @@
 /**
- * Critty — attachment text extraction (Chromium: ChatGPT, Claude, Gemini).
+ * ChatGuard — attachment text extraction (Chromium: ChatGPT, Claude, Gemini).
  *
  * Converts attached documents to plain text with zero external dependencies,
  * using browser APIs only (DecompressionStream, TextDecoder, DOMParser):
@@ -10,7 +10,7 @@
  * Filenames are preserved by the caller and always sent to the classifier even
  * when text extraction fails (e.g. scanned PDFs), so obvious PII filenames like
  * "passport.pdf" are still flagged.
- * Attached to globalThis as CrittyFiles.
+ * Attached to globalThis as ChatGuardFiles.
  */
 (function (global) {
   "use strict";
@@ -279,5 +279,5 @@
       });
   }
 
-  global.CrittyFiles = { extractText: extractText };
+  global.ChatGuardFiles = { extractText: extractText };
 })(typeof globalThis !== "undefined" ? globalThis : this);

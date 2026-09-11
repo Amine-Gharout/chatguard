@@ -1,5 +1,5 @@
 /**
- * Critty — content script bootstrap.
+ * ChatGuard — content script bootstrap.
  *
  * Intercepts the user-triggered send paths (Enter keydown + send-button click)
  * in the capture phase. In LLM mode every message is analyzed by the background
@@ -13,12 +13,12 @@
 (function () {
   "use strict";
 
-  var Detector = globalThis.CrittyDetector;
-  var Dom = globalThis.CrittyDom;
-  var Modal = globalThis.CrittyModal;
-  var Settings = globalThis.CrittySettings;
-  var Storage = globalThis.CrittyStorage;
-  var Files = globalThis.CrittyFiles;
+  var Detector = globalThis.ChatGuardDetector;
+  var Dom = globalThis.ChatGuardDom;
+  var Modal = globalThis.ChatGuardModal;
+  var Settings = globalThis.ChatGuardSettings;
+  var Storage = globalThis.ChatGuardStorage;
+  var Files = globalThis.ChatGuardFiles;
 
   var settings = JSON.parse(JSON.stringify(Settings.DEFAULTS));
   var bypass = false;
@@ -64,7 +64,7 @@
     bypass = true;
     var sent = Dom.sendMessage();
     if (!sent) {
-      console.warn("Critty: could not programmatically send the message.");
+      console.warn("ChatGuard: could not programmatically send the message.");
     }
   }
 
@@ -128,7 +128,7 @@
       if (attachments.length > 8) attachments.shift();
       Files.extractText(file).then(function (text) {
         entry.text = text || "";
-        console.log("[Critty] extracted " + file.name + " (" + String(text || "").length + " chars)");
+        console.log("[ChatGuard] extracted " + file.name + " (" + String(text || "").length + " chars)");
       });
     });
   }
@@ -136,14 +136,14 @@
   function onFileChange(event) {
     var target = event.target;
     if (target && target.tagName === "INPUT" && target.type === "file") {
-      console.log("[Critty] file input change: " + (target.files ? target.files.length : 0) + " file(s)");
+      console.log("[ChatGuard] file input change: " + (target.files ? target.files.length : 0) + " file(s)");
       rememberFiles(target.files);
     }
   }
 
   function onDrop(event) {
     if (event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length) {
-      console.log("[Critty] drop: " + event.dataTransfer.files.length + " file(s)");
+      console.log("[ChatGuard] drop: " + event.dataTransfer.files.length + " file(s)");
       rememberFiles(event.dataTransfer.files);
     }
   }
@@ -151,7 +151,7 @@
   function onPaste(event) {
     var dt = event.clipboardData;
     if (dt && dt.files && dt.files.length) {
-      console.log("[Critty] paste: " + dt.files.length + " file(s)");
+      console.log("[ChatGuard] paste: " + dt.files.length + " file(s)");
       rememberFiles(dt.files);
     }
   }
@@ -203,7 +203,7 @@
     });
     var result = list.slice(-5);
     console.log(
-      "[Critty] sending with " + result.length + " attachment(s): " +
+      "[ChatGuard] sending with " + result.length + " attachment(s): " +
         result.map(function (a) { return a.name; }).join(", ")
     );
     return result;
@@ -266,7 +266,7 @@
 
       try {
         chrome.runtime.sendMessage(
-          { type: "critty_classify", text: text, attachments: attachments || [] },
+          { type: "chatguard_classify", text: text, attachments: attachments || [] },
           function (response) {
             if (done) return;
             done = true;
@@ -371,7 +371,7 @@
   }
 
   function init() {
-    console.log("[Critty] loaded — LLM analysis + attachment scanning");
+    console.log("[ChatGuard] loaded — LLM analysis + attachment scanning");
     loadSettings();
     document.addEventListener("keydown", handleEvent, true);
     document.addEventListener("click", handleEvent, true);

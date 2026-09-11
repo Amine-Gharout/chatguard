@@ -1,14 +1,14 @@
 /**
- * Critty — popup controller.
+ * ChatGuard — popup controller.
  * Reads/writes chrome.storage.sync and renders the per-category toggles from
  * the shared detector category list.
  */
 (function () {
   "use strict";
 
-  var Settings = globalThis.CrittySettings;
-  var Detector = globalThis.CrittyDetector;
-  var Storage = globalThis.CrittyStorage;
+  var Settings = globalThis.ChatGuardSettings;
+  var Detector = globalThis.ChatGuardDetector;
+  var Storage = globalThis.ChatGuardStorage;
 
   var masterToggle = document.getElementById("master-toggle");
   var llmToggle = document.getElementById("llm-toggle");

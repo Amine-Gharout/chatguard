@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * Generates test files for Critty's attachment analyzer:
+ * Generates test files for ChatGuard's attachment analyzer:
  *   test-assets/sample.txt   — plain text
  *   test-assets/sample.pdf   — one page, FlateDecode content stream
  *   test-assets/sample.docx  — minimal OOXML document
@@ -17,7 +17,7 @@ const zlib = require("node:zlib");
 const OUT_DIR = path.join(__dirname, "..", "test-assets");
 
 const lines = [
-  "Critty test document",
+  "ChatGuard test document",
   "",
   "Full name: Alexandra Dupont",
   "Address: 47 Rue de la Paix, 75002 Paris, France",
@@ -28,7 +28,7 @@ const lines = [
   "Bank account (IBAN): FR76 3000 6000 0012 3456 7890 189",
   "Social security number: 2 91 03 75 116 005 42",
   "",
-  "This document contains sample personal data for testing Critty."
+  "This document contains sample personal data for testing ChatGuard."
 ];
 
 // ---------- CRC32 ----------

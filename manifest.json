@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Critty — Send Nudge (CDH Demo)",
+  "name": "ChatGuard — Send Nudge (CDH Demo)",
   "version": "0.1.0",
   "description": "Research prototype: nudges you before sending sensitive/emotional messages (romantic, distress, self-harm, violence, explicit content, private info, and more) to ChatGPT, Claude, or Gemini. Runs fully locally.",
   "permissions": ["storage"],
@@ -13,7 +13,7 @@
   },
   "action": {
     "default_popup": "src/popup/popup.html",
-    "default_title": "Critty"
+    "default_title": "ChatGuard"
   },
   "icons": {
     "16": "icons/icon16.png",
@@ -22,7 +22,7 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "critty@example.com",
+      "id": "chatguard@example.com",
       "strict_min_version": "109.0"
     }
   },

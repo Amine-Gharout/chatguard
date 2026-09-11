@@ -1,10 +1,10 @@
 /**
- * Critty — cross-browser storage wrapper.
+ * ChatGuard — cross-browser storage wrapper.
  *
  * Firefox and Safari expose a promise-based `browser.storage`; Chrome exposes
  * a callback-based `chrome.storage`. This normalizes both to a single
  * callback interface so the rest of the code is browser-agnostic.
- * Attached to globalThis as CrittyStorage.
+ * Attached to globalThis as ChatGuardStorage.
  */
 (function (global) {
   "use strict";
@@ -54,7 +54,7 @@
     }
   }
 
-  global.CrittyStorage = {
+  global.ChatGuardStorage = {
     get: get,
     set: set,
     getLocal: getLocal,
