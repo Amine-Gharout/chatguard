@@ -29,6 +29,7 @@ continuing. It never blocks you outright — **Send anyway** is always available
 - [Research context & ethics](#research-context--ethics)
 - [Detection categories](#detection-categories)
 - [How it works](#how-it-works)
+- [Resource tracking](#resource-tracking)
 - [Project structure](#project-structure)
 - [Installation — step by step](#installation--step-by-step)
 - [Verify it works](#verify-it-works)
@@ -155,40 +156,12 @@ of it with **Edit message** credits your **resources saved** counters; sending i
 anyway does not. Copy lives in `CATEGORY_MESSAGES.howto` in
 `src/content/modal.js`.
 
-### Resource usage tracking
+### Resource counters
 
-ChatGuard estimates the environmental impact of **LLM inference** with a single
-shared model (`src/shared/impact.js`) so the *used* and *saved* counters stay
-directly comparable. All figures are **estimates, not measurements**, and are
-labelled **est.** in the UI:
-
-$$\text{kWh} = \text{promptTokens} \times 3\times10^{-7} + \text{completionTokens} \times 6\times10^{-7}$$
-
-$$\text{CO}_2\text{e (g)} = \text{kWh} \times 430 \qquad \text{water (L)} = \text{kWh} \times 0.91$$
-
-| Parameter | Default | Basis |
-| --- | --- | --- |
-| `kWhPerPromptToken` | `3e-7` | Luccioni et al., *Power Hungry Processing* (arXiv:2311.16863): ~0.047 kWh per 1,000 text generations |
-| `kWhPerCompletionToken` | `6e-7` | same source; decoding is ~2× prefill per token (memory-bandwidth bound) |
-| `carbonGPerKwh` | `430` | global grid-average carbon intensity (~2022); ~60 in France, ~800+ on coal grids |
-| `waterLPerKwh` | `0.91` | data-centre WUE — Equinix global average 2025 (published range 0–2.5 L/kWh) |
-
-- **Used** — after every classifier call, the service worker reads the
-  `prompt_tokens` and `completion_tokens` reported by your LLM, applies the
-  model above, and adds the result to `usageElectricityKwh`, `usageWaterL` and
-  `usageCarbonG`. Only runs in AI-classifier mode.
-- **Saved** — when you back out of a *“how to”* nudge, the content script
-  estimates the counterfactual cost of the chatbot answering it: prompt tokens
-  from the message length (`chars ÷ 4`) plus an assumed 400-token answer
-  (`assumedAnswerTokens`), then applies the same model. Credited to
-  `savedElectricityKwh`, `savedWaterL`, `savedCarbonG`.
-- The same estimate is shown inside the *“how to”* nudge, e.g.
-  `Estimated impact if an AI chatbot answered this: ⚡ ~0.24 Wh · 💧 ~0.22 mL · 🌍 ~0.10 g CO₂e`.
-- The modal's educational quotes cite large cloud models (e.g. “~0.5 L per GPT-3
-  query”); the counters estimate your **local model's** incremental inference
-  only — a different, much smaller scope.
-- To recalibrate, edit the `MODEL` object at the top of `src/shared/impact.js` —
-  both counters update at once.
+The popup shows two estimated counters — **Resource usage** and
+**Resources saved** — each expressed in ⚡ electricity, 💧 water and 🌍 carbon.
+Both derive from one shared estimation model, detailed in the
+[Resource tracking](#resource-tracking) section below.
 
 ### LLM detection (optional, Chromium)
 
@@ -216,6 +189,114 @@ $$\text{CO}_2\text{e (g)} = \text{kWh} \times 430 \qquad \text{water (L)} = \tex
 - Any OpenAI-compatible local server works, not just Ollama — just point
   **Base URL** at it.
 
+## Resource tracking
+
+ChatGuard estimates the environmental cost of **LLM inference** and surfaces it
+as three metrics — ⚡ electricity, 💧 water and 🌍 carbon — through two counters
+in the popup:
+
+| | **Resource usage** | **Resources saved** |
+| --- | --- | --- |
+| Question it answers | “How much have the extension's own AI checks cost so far?” | “How much did you avoid by backing out of *how-to* queries?” |
+| Computed by | background service worker (`src/background/service-worker.js`) | content script (`src/content/content.js`) |
+| Data source | the real `prompt_tokens` / `completion_tokens` returned by your local LLM | the message length + an assumed 400-token answer |
+| Storage keys | `usageElectricityKwh`, `usageWaterL`, `usageCarbonG` | `savedElectricityKwh`, `savedWaterL`, `savedCarbonG` |
+| Active when | AI-classifier mode only | both modes |
+
+All six values live in `chrome.storage.local`, are labelled **est.** in the UI,
+and are cleared together by the popup's **Reset all** button.
+
+### The estimation model
+
+Both counters share one model in [`src/shared/impact.js`](src/shared/impact.js),
+so a saved kilowatt-hour costs exactly as much as a used one:
+
+$$\text{kWh} = \text{promptTokens} \times 3\times10^{-7} \;+\; \text{completionTokens} \times 6\times10^{-7}$$
+
+$$\text{CO}_2\text{e (g)} = \text{kWh} \times 430 \qquad\qquad \text{water (L)} = \text{kWh} \times 0.91$$
+
+| Parameter | Default | What it is, and where it comes from |
+| --- | --- | --- |
+| `kWhPerPromptToken` | `3e-7` | 0.3 kWh per 1,000,000 prompt tokens. Order of magnitude from Luccioni et al., *Power Hungry Processing* (arXiv:2311.16863), which measured ~0.047 kWh per 1,000 text generations. |
+| `kWhPerCompletionToken` | `6e-7` | 0.6 kWh per 1,000,000 completion tokens — twice the prompt rate, because decoding is memory-bandwidth bound. |
+| `carbonGPerKwh` | `430` | Grid carbon intensity, in g CO₂e per kWh (global average ~2022). Varies by region: ~60 in France, ~250 EU average, ~800+ on coal-heavy grids. |
+| `waterLPerKwh` | `0.91` | Data-centre WUE — litres of cooling water per kWh of IT energy. Equinix global average 2025; published range 0–2.5 L/kWh. |
+| `assumedAnswerTokens` | `400` | Assumed length of the chatbot answer you “save” by backing out of a *how-to* query. |
+| `charsPerToken` | `4` | Rough tokeniser ratio used to turn message text into prompt tokens. |
+
+### How “used” works
+
+1. You send a message with **AI classifier** enabled.
+2. The service worker calls your local LLM and receives an OpenAI-compatible
+   `usage` object containing `prompt_tokens`, `completion_tokens` and
+   `total_tokens`.
+3. `accumulateUsage(prompt_tokens, completion_tokens)` runs the model above and
+   *adds* the result to the three `usage*` keys (a read–modify–write on
+   `chrome.storage.local`).
+4. Each call logs its contribution locally:
+   `[ChatGuard] +usage prompt_tokens=… completion_tokens=… kWh=… waterL=… carbonG=…`.
+
+Because it depends on real token counts, **used is only recorded in
+AI-classifier mode**. A *how-to* query is intercepted *before* the classifier
+runs, so it never contributes to *used*.
+
+### How “saved” works
+
+1. You type a message containing **“how to”** and press send.
+2. Before the LLM is consulted, the content script blocks the send and shows the
+   awareness nudge. It estimates what the chatbot answering would have cost:
+   `promptTokens = ceil(chars ÷ 4)` and `completionTokens = 400`.
+3. The nudge displays that estimate inline, e.g.
+   `Estimated impact if an AI chatbot answered this: ⚡ ~0.24 Wh · 💧 ~0.22 mL · 🌍 ~0.10 g CO₂e`.
+4. If you click **Edit message** (or press <kbd>Esc</kbd>) you back out: the same
+   estimate is added to the three `saved*` keys. **Send anyway** credits nothing.
+
+### A worked example
+
+For “how to dance” (12 characters):
+
+| Step | Tokens | Energy |
+| --- | --- | --- |
+| prompt tokens | `ceil(12 ÷ 4) = 3` | `3 × 3e-7 = 9e-7 kWh` |
+| assumed answer | `400` | `400 × 6e-7 = 2.4e-4 kWh` |
+| **total** | `403` | **`2.409e-4 kWh` → ~0.24 Wh** |
+
+Then, applying the two coefficients:
+
+- 🌍 carbon: `2.409e-4 × 430 ≈ 0.104 g CO₂e`
+- 💧 water: `2.409e-4 × 0.91 ≈ 0.00022 L ≈ 0.22 mL`
+
+For comparison, a single classification call (~150 prompt + 20 completion
+tokens) costs ≈ **0.06 Wh** — about four times less than the *how-to* estimate
+above, because an answer of 400 tokens is far longer than a verdict.
+
+### Units & display
+
+The popup picks the most readable unit per value (formatters live in
+`src/shared/impact.js`):
+
+- ⚡ electricity — `Wh` below 1 kWh, otherwise `kWh`
+- 💧 water — `mL` below 1 L, otherwise `L`
+- 🌍 carbon — `g CO₂e` below 1 kg, otherwise `kg CO₂e`
+
+### Scope, caveats & recalibration
+
+- **It models your local model's incremental inference only.** The modal's
+  educational quotes cite large cloud models (e.g. “~0.5 L per GPT-3 query”);
+  those include training amortisation and full data-centre overhead, so they are
+  a different, much larger scope than the counters.
+- **Not a meter.** There is no wattmeter between the extension and Ollama —
+  these are transparent, citable estimates, which is why the UI labels them
+  **est.**.
+- **Water = cooling only.** `waterLPerKwh` is on-site data-centre WUE; it does
+  not include the water embedded in electricity generation (which varies by
+  energy source).
+- **Carbon is grid-dependent.** The default `430 gCO₂e/kWh` is a global average;
+  the honest number for your region can differ by an order of magnitude.
+- To change any figure, edit the `MODEL` object at the top of
+  `src/shared/impact.js` — both counters and the nudge text update at once. To
+  verify the model: `node tests/impact.test.js`.
+
 ## Project structure
 
 ```
@@ -228,6 +309,7 @@ src/
     settings.js                     settings schema + DEFAULTS
     storage.js                      storage wrapper (chrome.storage + browser.* fallback)
     detector.js                     offline rule engine + CATEGORIES
+    impact.js                       environmental-impact model (energy · water · carbon)
   content/
     dom.js                          site DOM helpers (resilient selectors, caching)
     files.js                        DOCX / PDF / text extraction (zero dependencies)
@@ -242,9 +324,10 @@ scripts/
   generate-test-files.js            builds test-assets/ (TXT, PDF, DOCX) with node:zlib
 tests/
   detector.test.js                  Node unit tests for the detector
+  impact.test.js                    Node unit tests for the impact model
 test-assets/
   sample.txt / sample.pdf / sample.docx   PII-bearing fixtures for attachment testing
-.github/workflows/ci.yml            CI: detector tests + manifest.json validation
+.github/workflows/ci.yml            CI: detector + impact tests, manifest.json validation
 ```
 
 ## Installation — step by step
