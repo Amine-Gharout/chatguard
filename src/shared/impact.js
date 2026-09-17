@@ -20,8 +20,8 @@
  *   - Grid carbon intensity — ~430 gCO2e/kWh global average (~2022); varies
  *     from ~60 g (France) to ~800+ g (coal-heavy grids).
  *
- * Loaded as a classic script (content script, popup, service worker via
- * importScripts) and required in Node tests. No dependencies, ES5-compatible.
+ * Loaded as a classic script (content script and popup) and required in Node
+ * tests. No dependencies, ES5-compatible.
  */
 (function (global) {
   "use strict";

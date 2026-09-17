@@ -67,6 +67,31 @@
     }
   }
 
+  // Estimate and accumulate the cost of a message the user actually sends to
+  // the chatbot: prompt tokens from the message text plus an assumed answer.
+  // Uses the same shared model as the "saved" counter, so both stay comparable.
+  function recordUsage(text) {
+    var impact = Impact.estimateImpact(
+      Impact.estimatePromptTokens(text),
+      Impact.MODEL.assumedAnswerTokens
+    );
+    if (!(impact.kwh > 0)) return;
+    Storage.getLocal({ usageElectricityKwh: 0, usageWaterL: 0, usageCarbonG: 0 }, function (items) {
+      Storage.setLocal({
+        usageElectricityKwh: (items.usageElectricityKwh || 0) + impact.kwh,
+        usageWaterL: (items.usageWaterL || 0) + impact.waterL,
+        usageCarbonG: (items.usageCarbonG || 0) + impact.carbonG
+      });
+    });
+  }
+
+  // Send a message and count its estimated cost — used whenever a message is
+  // actually going out (safe sends and "Send anyway").
+  function sendSafely(text) {
+    recordUsage(text);
+    sendNow();
+  }
+
   function howtoImpactText(impact) {
     return (
       "Estimated impact if an AI chatbot answered this: ⚡ ~" +
@@ -226,7 +251,7 @@
     });
   }
 
-  function resolveLLM(result, fallbackHits) {
+  function resolveLLM(text, result, fallbackHits) {
     checking = false;
     Modal.hideIndicator();
 
@@ -236,25 +261,29 @@
         if (matches.length) {
           Modal.show({
             matches: matches,
-            onSendAnyway: sendNow,
+            onSendAnyway: function () { sendSafely(text); },
             onEdit: editMessage
           });
           return;
         }
         // The LLM flagged only categories the user has disabled — send.
-        sendNow();
+        sendSafely(text);
         return;
       }
       // The LLM judged the message safe — send.
-      sendNow();
+      sendSafely(text);
       return;
     }
 
     // LLM unavailable/error/timeout — fall back to the local rules.
     if (fallbackHits && fallbackHits.length) {
-      Modal.show({ matches: fallbackHits, onSendAnyway: sendNow, onEdit: editMessage });
+      Modal.show({
+        matches: fallbackHits,
+        onSendAnyway: function () { sendSafely(text); },
+        onEdit: editMessage
+      });
     } else {
-      sendNow();
+      sendSafely(text);
     }
   }
 
@@ -342,7 +371,7 @@
             savings: howtoImpactText(howtoImpact)
           }
         ],
-        onSendAnyway: sendNow,
+        onSendAnyway: function () { sendSafely(text); },
         onEdit: function () { editHowToMessage(howtoImpact); }
       });
       return;
@@ -352,11 +381,19 @@
 
     // Rule-only mode: block only when the local rules flag something.
     if (settings.useLLM === false) {
-      if (hits.length === 0) return;
+      if (hits.length === 0) {
+        // Not flagged — the message sends normally; count its estimated cost.
+        recordUsage(text);
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
-      Modal.show({ matches: hits, onSendAnyway: sendNow, onEdit: editMessage });
+      Modal.show({
+        matches: hits,
+        onSendAnyway: function () { sendSafely(text); },
+        onEdit: editMessage
+      });
       return;
     }
 
@@ -373,7 +410,7 @@
     var attachments = currentAttachments();
     llmClassify(text, attachments).then(function (result) {
       if (token !== checkToken) return; // cancelled or superseded
-      resolveLLM(result, hits);
+      resolveLLM(text, result, hits);
     });
   }
 

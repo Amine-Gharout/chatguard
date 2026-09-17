@@ -8,8 +8,6 @@
  */
 "use strict";
 
-importScripts("../shared/impact.js");
-
 const LOCAL_DEFAULT_URL = "http://127.0.0.1:11434/v1/chat/completions";
 const LOCAL_DEFAULT_MODEL = "qwen2.5:7b-instruct";
 
@@ -39,42 +37,6 @@ function storageGet(defaults) {
       resolve(defaults);
     }
   });
-}
-
-function storageSet(items) {
-  return new Promise((resolve) => {
-    try {
-      chrome.storage.local.set(items, resolve);
-    } catch (e) {
-      resolve();
-    }
-  });
-}
-
-async function accumulateUsage(promptTokens, completionTokens) {
-  const impact = globalThis.ChatGuardImpact.estimateImpact(
-    Number(promptTokens) || 0,
-    Number(completionTokens) || 0
-  );
-  if (!(impact.kwh > 0)) return;
-  const items = await storageGet({
-    usageElectricityKwh: 0,
-    usageWaterL: 0,
-    usageCarbonG: 0
-  });
-  const next = {
-    usageElectricityKwh: (items.usageElectricityKwh || 0) + impact.kwh,
-    usageWaterL: (items.usageWaterL || 0) + impact.waterL,
-    usageCarbonG: (items.usageCarbonG || 0) + impact.carbonG
-  };
-  console.log(
-    "[ChatGuard] +usage prompt_tokens=" + impact.promptTokens +
-    " completion_tokens=" + impact.completionTokens +
-    " kWh=" + next.usageElectricityKwh.toFixed(6) +
-    " waterL=" + next.usageWaterL.toFixed(6) +
-    " carbonG=" + next.usageCarbonG.toFixed(6)
-  );
-  await storageSet(next);
 }
 
 async function getConfig() {
@@ -140,11 +102,6 @@ async function classify(text, attachments) {
   if (!res.ok) return { error: "http_" + res.status };
 
   const data = await res.json();
-  const usage = (data && data.usage) || {};
-  await accumulateUsage(
-    usage.prompt_tokens || usage.total_tokens || 0,
-    usage.completion_tokens || 0
-  );
 
   const content =
     data &&

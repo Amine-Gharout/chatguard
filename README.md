@@ -197,11 +197,11 @@ in the popup:
 
 | | **Resource usage** | **Resources saved** |
 | --- | --- | --- |
-| Question it answers | “How much have the extension's own AI checks cost so far?” | “How much did you avoid by backing out of *how-to* queries?” |
-| Computed by | background service worker (`src/background/service-worker.js`) | content script (`src/content/content.js`) |
-| Data source | the real `prompt_tokens` / `completion_tokens` returned by your local LLM | the message length + an assumed 400-token answer |
+| Question it answers | “How much have your sent messages cost so far (estimated)?” | “How much did you avoid by backing out of *how-to* queries?” |
+| Computed by | content script (`src/content/content.js`) | content script (`src/content/content.js`) |
+| Data source | the message you send + an assumed 400-token answer | the same estimate, for a *how-to* query you back out of |
 | Storage keys | `usageElectricityKwh`, `usageWaterL`, `usageCarbonG` | `savedElectricityKwh`, `savedWaterL`, `savedCarbonG` |
-| Active when | AI-classifier mode only | both modes |
+| Active when | both modes — every message actually sent | both modes — only *how-to* queries you abandon |
 
 All six values live in `chrome.storage.local`, are labelled **est.** in the UI,
 and are cleared together by the popup's **Reset all** button.
@@ -226,19 +226,13 @@ $$\text{CO}_2\text{e (g)} = \text{kWh} \times 430 \qquad\qquad \text{water (L)} 
 
 ### How “used” works
 
-1. You send a message with **AI classifier** enabled.
-2. The service worker calls your local LLM and receives an OpenAI-compatible
-   `usage` object containing `prompt_tokens`, `completion_tokens` and
-   `total_tokens`.
-3. `accumulateUsage(prompt_tokens, completion_tokens)` runs the model above and
-   *adds* the result to the three `usage*` keys (a read–modify–write on
+1. You send any message to the chatbot — a safe send, a **Send anyway**, in
+   both rules-only and AI-classifier modes.
+2. The content script estimates its cost with the shared model: prompt tokens
+   from the text (`ceil(chars ÷ 4)`) plus the assumed 400-token answer.
+3. It *adds* the result to the three `usage*` keys (a read–modify–write on
    `chrome.storage.local`).
-4. Each call logs its contribution locally:
-   `[ChatGuard] +usage prompt_tokens=… completion_tokens=… kWh=… waterL=… carbonG=…`.
-
-Because it depends on real token counts, **used is only recorded in
-AI-classifier mode**. A *how-to* query is intercepted *before* the classifier
-runs, so it never contributes to *used*.
+4. Backing out of a nudge records nothing here — that is what **saved** is for.
 
 ### How “saved” works
 
@@ -266,9 +260,9 @@ Then, applying the two coefficients:
 - 🌍 carbon: `2.409e-4 × 430 ≈ 0.104 g CO₂e`
 - 💧 water: `2.409e-4 × 0.91 ≈ 0.00022 L ≈ 0.22 mL`
 
-For comparison, a single classification call (~150 prompt + 20 completion
-tokens) costs ≈ **0.06 Wh** — about four times less than the *how-to* estimate
-above, because an answer of 400 tokens is far longer than a verdict.
+A short message such as “hi” (2 chars → 1 prompt token) costs ≈ **0.24 Wh** as
+well — the assumed 400-token answer dominates every estimate, so message length
+only moves the needle by a few mWh.
 
 ### Units & display
 
@@ -494,7 +488,7 @@ ChatGuard writes the following entries and nothing else:
 | `useLLM` | `sync` | popup | rule-only vs. AI-classifier mode |
 | `categories` | `sync` | popup | per-category booleans |
 | `localBaseUrl`, `localModel` | `local` | popup | local classifier endpoint and model |
-| `usageElectricityKwh`, `usageWaterL`, `usageCarbonG` | `local` | service worker | estimated usage counters |
+| `usageElectricityKwh`, `usageWaterL`, `usageCarbonG` | `local` | content script | estimated usage counters |
 | `savedElectricityKwh`, `savedWaterL`, `savedCarbonG` | `local` | content script | estimated (counterfactual) savings counters |
 
 **Message text is never stored** — not in `chrome.storage`, not in
