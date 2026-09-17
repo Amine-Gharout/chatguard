@@ -19,16 +19,15 @@
   var Settings = globalThis.ChatGuardSettings;
   var Storage = globalThis.ChatGuardStorage;
   var Files = globalThis.ChatGuardFiles;
+  var Impact = globalThis.ChatGuardImpact;
 
   var settings = JSON.parse(JSON.stringify(Settings.DEFAULTS));
   var bypass = false;
   var checking = false;
   var checkToken = 0;
 
-  // Estimated resources saved when the user backs out of a "how to" query
-  // (also shown inside the how-to nudge).
-  var SAVED_KWH_PER_CANCEL = 0.01;
-  var SAVED_WATER_L_PER_CANCEL = 0.005;
+  // Environmental impact is modelled in src/shared/impact.js and shared by the
+  // "used" and "saved" counters so both stay directly comparable.
 
   function mergeSettings(defaults, stored) {
     var merged = JSON.parse(JSON.stringify(defaults));
@@ -68,13 +67,14 @@
     }
   }
 
-  function howtoSavingsText() {
+  function howtoImpactText(impact) {
     return (
-      "Estimated savings if you search Google instead: ⚡ ~" +
-      Math.round(SAVED_KWH_PER_CANCEL * 1000) +
-      " Wh · 💧 ~" +
-      Math.round(SAVED_WATER_L_PER_CANCEL * 1000) +
-      " mL of water."
+      "Estimated impact if an AI chatbot answered this: ⚡ ~" +
+      Impact.format.electricity(impact.kwh) +
+      " · 💧 ~" +
+      Impact.format.water(impact.waterL) +
+      " · 🌍 ~" +
+      Impact.format.carbon(impact.carbonG)
     );
   }
 
@@ -85,13 +85,16 @@
     Dom.focusComposer();
   }
 
-  // Only backing out of a "how to" query counts as a saved resource.
-  function editHowToMessage() {
+  // Only backing out of a "how to" query counts as saved resources. The credit
+  // is the counterfactual impact of the chatbot answering it, estimated with
+  // the same model used for the "used" counters.
+  function editHowToMessage(impact) {
     editMessage();
-    Storage.getLocal({ savedElectricityKwh: 0, savedWaterL: 0 }, function (items) {
+    Storage.getLocal({ savedElectricityKwh: 0, savedWaterL: 0, savedCarbonG: 0 }, function (items) {
       Storage.setLocal({
-        savedElectricityKwh: (items.savedElectricityKwh || 0) + SAVED_KWH_PER_CANCEL,
-        savedWaterL: (items.savedWaterL || 0) + SAVED_WATER_L_PER_CANCEL
+        savedElectricityKwh: (items.savedElectricityKwh || 0) + impact.kwh,
+        savedWaterL: (items.savedWaterL || 0) + impact.waterL,
+        savedCarbonG: (items.savedCarbonG || 0) + impact.carbonG
       });
     });
   }
@@ -325,6 +328,10 @@
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
+      var howtoImpact = Impact.estimateImpact(
+        Impact.estimatePromptTokens(text),
+        Impact.MODEL.assumedAnswerTokens
+      );
       Modal.show({
         matches: [
           {
@@ -332,11 +339,11 @@
             label: "How-to query",
             guidance: "",
             matchedPhrases: [],
-            savings: howtoSavingsText()
+            savings: howtoImpactText(howtoImpact)
           }
         ],
         onSendAnyway: sendNow,
-        onEdit: editHowToMessage
+        onEdit: function () { editHowToMessage(howtoImpact); }
       });
       return;
     }

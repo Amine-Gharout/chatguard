@@ -39,6 +39,7 @@
         "src/shared/settings.js",
         "src/shared/storage.js",
         "src/shared/detector.js",
+        "src/shared/impact.js",
         "src/content/dom.js",
         "src/content/files.js",
         "src/content/modal.js",

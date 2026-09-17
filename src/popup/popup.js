@@ -9,15 +9,18 @@
   var Settings = globalThis.ChatGuardSettings;
   var Detector = globalThis.ChatGuardDetector;
   var Storage = globalThis.ChatGuardStorage;
+  var Impact = globalThis.ChatGuardImpact;
 
   var masterToggle = document.getElementById("master-toggle");
   var llmToggle = document.getElementById("llm-toggle");
   var categoryList = document.getElementById("category-list");
   var usageKwh = document.getElementById("usage-kwh");
   var usageWater = document.getElementById("usage-water");
+  var usageCarbon = document.getElementById("usage-carbon");
   var usageReset = document.getElementById("usage-reset");
   var savedKwh = document.getElementById("saved-kwh");
   var savedWater = document.getElementById("saved-water");
+  var savedCarbon = document.getElementById("saved-carbon");
   var localUrl = document.getElementById("local-url");
   var localModel = document.getElementById("local-model");
 
@@ -41,26 +44,23 @@
     });
   }
 
-  function formatElectricity(kwh) {
-    if (!kwh || kwh <= 0) return "0 Wh";
-    if (kwh < 1) return (kwh * 1000).toFixed(2) + " Wh";
-    return kwh.toFixed(3) + " kWh";
-  }
-
-  function formatWater(litres) {
-    if (!litres || litres <= 0) return "0 mL";
-    if (litres < 1) return (litres * 1000).toFixed(2) + " mL";
-    return litres.toFixed(2) + " L";
-  }
-
   function loadUsage() {
     Storage.getLocal(
-      { usageElectricityKwh: 0, usageWaterL: 0, savedElectricityKwh: 0, savedWaterL: 0 },
+      {
+        usageElectricityKwh: 0,
+        usageWaterL: 0,
+        usageCarbonG: 0,
+        savedElectricityKwh: 0,
+        savedWaterL: 0,
+        savedCarbonG: 0
+      },
       function (items) {
-        usageKwh.textContent = formatElectricity(items.usageElectricityKwh);
-        usageWater.textContent = formatWater(items.usageWaterL);
-        savedKwh.textContent = formatElectricity(items.savedElectricityKwh);
-        savedWater.textContent = formatWater(items.savedWaterL);
+        usageKwh.textContent = Impact.format.electricity(items.usageElectricityKwh);
+        usageWater.textContent = Impact.format.water(items.usageWaterL);
+        usageCarbon.textContent = Impact.format.carbon(items.usageCarbonG);
+        savedKwh.textContent = Impact.format.electricity(items.savedElectricityKwh);
+        savedWater.textContent = Impact.format.water(items.savedWaterL);
+        savedCarbon.textContent = Impact.format.carbon(items.savedCarbonG);
       }
     );
   }
@@ -113,7 +113,14 @@
   });
 
   usageReset.addEventListener("click", function () {
-    Storage.setLocal({ usageElectricityKwh: 0, usageWaterL: 0 });
+    Storage.setLocal({
+      usageElectricityKwh: 0,
+      usageWaterL: 0,
+      usageCarbonG: 0,
+      savedElectricityKwh: 0,
+      savedWaterL: 0,
+      savedCarbonG: 0
+    });
     loadUsage();
   });
 

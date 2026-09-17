@@ -50,13 +50,15 @@
       <h2>Resource usage <span class="tag">est.</span></h2>
       <div class="stat"><span>⚡ Electricity</span><strong id="usage-kwh">0 Wh</strong></div>
       <div class="stat"><span>💧 Water</span><strong id="usage-water">0 mL</strong></div>
-      <button type="button" id="usage-reset" class="btn">Reset</button>
+      <div class="stat"><span>🌍 Carbon</span><strong id="usage-carbon">0 g CO₂e</strong></div>
+      <button type="button" id="usage-reset" class="btn">Reset all</button>
     </section>
 
     <section class="card">
       <h2>Resources saved <span class="tag">est.</span></h2>
       <div class="stat saved"><span>⚡ Electricity</span><strong id="saved-kwh">0 Wh</strong></div>
       <div class="stat saved"><span>💧 Water</span><strong id="saved-water">0 mL</strong></div>
+      <div class="stat saved"><span>🌍 Carbon</span><strong id="saved-carbon">0 g CO₂e</strong></div>
     </section>
 
     <p class="footnote">Rule-based detection is local. Nothing is stored or logged.</p>
@@ -64,6 +66,7 @@
     <script src="../shared/settings.js"></script>
     <script src="../shared/storage.js"></script>
     <script src="../shared/detector.js"></script>
+    <script src="../shared/impact.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

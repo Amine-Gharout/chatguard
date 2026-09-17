@@ -16,8 +16,8 @@ jobs:
         with:
           node-version: 20
 
-      - name: Run detector tests
-        run: node tests/detector.test.js
+      - name: Run detector and impact tests
+        run: npm test
 
       - name: Validate manifest.json
         run: node -e "JSON.parse(require('fs').readFileSync('manifest.json', 'utf8'))"

@@ -18,8 +18,8 @@ continuing. It never blocks you outright — **Send anyway** is always available
   on your own machine, and nothing is logged.
 - **Attachment scanning.** Attached DOCX, PDF, and plain-text files are
   converted to text and checked for personal data — filenames included.
-- **Resource awareness.** The popup tracks the classifier's estimated
-  electricity and water use (derived from the real token counts the LLM
+- **Resource awareness.** The popup tracks the estimated energy, water and
+  carbon impact of the classifier (derived from the real token counts the LLM
   returns), plus the estimated savings from prompts you back out of.
 - **Zero build step, zero dependencies.** Plain JavaScript loaded straight into
   the browser; the tests run on Node's built-in `assert`.
@@ -29,7 +29,6 @@ continuing. It never blocks you outright — **Send anyway** is always available
 - [Research context & ethics](#research-context--ethics)
 - [Detection categories](#detection-categories)
 - [How it works](#how-it-works)
-- [What gets stored](#what-gets-stored)
 - [Project structure](#project-structure)
 - [Installation — step by step](#installation--step-by-step)
 - [Verify it works](#verify-it-works)
@@ -150,7 +149,7 @@ then converted to plain text using browser APIs only (`DecompressionStream`,
 
 Any message containing the phrase **“how to”** triggers a dedicated awareness
 nudge *before* the LLM is consulted — no round-trip required. The nudge adds an
-estimated energy/water saving line and educational copy about AI limitations,
+estimated energy/water/carbon line and educational copy about AI limitations,
 data-centre water use, and labour conditions in the AI supply chain. Backing out
 of it with **Edit message** credits your **resources saved** counters; sending it
 anyway does not. Copy lives in `CATEGORY_MESSAGES.howto` in
@@ -158,22 +157,38 @@ anyway does not. Copy lives in `CATEGORY_MESSAGES.howto` in
 
 ### Resource usage tracking
 
-The popup shows two counters. Both are stored in `chrome.storage.local`,
-labelled **est.** in the UI, and resettable from the popup:
+ChatGuard estimates the environmental impact of **LLM inference** with a single
+shared model (`src/shared/impact.js`) so the *used* and *saved* counters stay
+directly comparable. All figures are **estimates, not measurements**, and are
+labelled **est.** in the UI:
 
-| Counter | Written by | Basis |
+$$\text{kWh} = \text{promptTokens} \times 3\times10^{-7} + \text{completionTokens} \times 6\times10^{-7}$$
+
+$$\text{CO}_2\text{e (g)} = \text{kWh} \times 430 \qquad \text{water (L)} = \text{kWh} \times 0.91$$
+
+| Parameter | Default | Basis |
 | --- | --- | --- |
-| **Usage** ⚡💧 | `src/background/service-worker.js` | The real `usage.total_tokens` returned by your local LLM, converted with `KWH_PER_TOKEN = 5e-6` (~5 kWh per million tokens) and `WATER_L_PER_KWH = 0.5` (litres per kWh of data-centre cooling) |
-| **Saved** ⚡💧 | `src/content/content.js` | A fixed `SAVED_KWH_PER_CANCEL = 0.01` kWh · `SAVED_WATER_L_PER_CANCEL = 0.005` L credited when you back out of a *“how to”* nudge |
+| `kWhPerPromptToken` | `3e-7` | Luccioni et al., *Power Hungry Processing* (arXiv:2311.16863): ~0.047 kWh per 1,000 text generations |
+| `kWhPerCompletionToken` | `6e-7` | same source; decoding is ~2× prefill per token (memory-bandwidth bound) |
+| `carbonGPerKwh` | `430` | global grid-average carbon intensity (~2022); ~60 in France, ~800+ on coal grids |
+| `waterLPerKwh` | `0.91` | data-centre WUE — Equinix global average 2025 (published range 0–2.5 L/kWh) |
 
-- **Usage is only recorded in AI-classifier mode**, because it depends on the
-  token counts the LLM returns. In rules-only mode nothing is recorded.
-- Each classifier call logs its contribution locally:
-  `[ChatGuard] +usage tokens=… kWh=… waterL=…`.
-- The same per-cancel estimate is rendered inside the *“how to”* nudge as
-  `Estimated savings if you search Google instead: ⚡ ~10 Wh · 💧 ~5 mL of water.`
-- To recalibrate, edit the constants at the top of
-  `src/background/service-worker.js` and `src/content/content.js`.
+- **Used** — after every classifier call, the service worker reads the
+  `prompt_tokens` and `completion_tokens` reported by your LLM, applies the
+  model above, and adds the result to `usageElectricityKwh`, `usageWaterL` and
+  `usageCarbonG`. Only runs in AI-classifier mode.
+- **Saved** — when you back out of a *“how to”* nudge, the content script
+  estimates the counterfactual cost of the chatbot answering it: prompt tokens
+  from the message length (`chars ÷ 4`) plus an assumed 400-token answer
+  (`assumedAnswerTokens`), then applies the same model. Credited to
+  `savedElectricityKwh`, `savedWaterL`, `savedCarbonG`.
+- The same estimate is shown inside the *“how to”* nudge, e.g.
+  `Estimated impact if an AI chatbot answered this: ⚡ ~0.24 Wh · 💧 ~0.22 mL · 🌍 ~0.10 g CO₂e`.
+- The modal's educational quotes cite large cloud models (e.g. “~0.5 L per GPT-3
+  query”); the counters estimate your **local model's** incremental inference
+  only — a different, much smaller scope.
+- To recalibrate, edit the `MODEL` object at the top of `src/shared/impact.js` —
+  both counters update at once.
 
 ### LLM detection (optional, Chromium)
 
@@ -364,9 +379,9 @@ A suggested walkthrough for a live CDH demo:
 6. **Attachments** — attach `test-assets/sample.pdf` (or any document with an
    address, phone number, or ID number), type `scan this`, and send. The
    privacy nudge fires on the extracted text.
-7. **Usage counters** — open the popup and show **Resource usage** (token-based,
-   updated after each classifier call in LLM mode) and **Resources saved**;
-   use **Reset** to clear usage between runs.
+7. **Usage counters** — open the popup and show **Resource usage** (energy,
+   water and carbon, updated after each classifier call in LLM mode) and
+   **Resources saved**; use **Reset all** to clear all six counters between runs.
 8. **Toggles** — turn a category off in the popup and repeat step 2: it now
    sends immediately, with no page reload required.
 
@@ -396,13 +411,13 @@ ChatGuard writes the following entries and nothing else:
 | `useLLM` | `sync` | popup | rule-only vs. AI-classifier mode |
 | `categories` | `sync` | popup | per-category booleans |
 | `localBaseUrl`, `localModel` | `local` | popup | local classifier endpoint and model |
-| `usageElectricityKwh`, `usageWaterL` | `local` | service worker | token-based usage counters |
-| `savedElectricityKwh`, `savedWaterL` | `local` | content script | per-cancel savings counters |
+| `usageElectricityKwh`, `usageWaterL`, `usageCarbonG` | `local` | service worker | estimated usage counters |
+| `savedElectricityKwh`, `savedWaterL`, `savedCarbonG` | `local` | content script | estimated (counterfactual) savings counters |
 
 **Message text is never stored** — not in `chrome.storage`, not in
 `localStorage`, not in cookies. It exists in memory only for the duration of the
-check. Resetting the counters in the popup or removing the extension removes
-everything.
+check. The popup's **Reset all** button zeroes every counter; removing the
+extension removes everything.
 
 ## Development
 

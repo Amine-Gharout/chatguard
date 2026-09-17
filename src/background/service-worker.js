@@ -8,13 +8,10 @@
  */
 "use strict";
 
+importScripts("../shared/impact.js");
+
 const LOCAL_DEFAULT_URL = "http://127.0.0.1:11434/v1/chat/completions";
 const LOCAL_DEFAULT_MODEL = "qwen2.5:7b-instruct";
-
-// Resource-usage estimates (illustrative, not metered): ~5 kWh per 1,000,000
-// tokens of inference, and ~0.5 L of water per kWh for data-centre cooling.
-const KWH_PER_TOKEN = 5e-6;
-const WATER_L_PER_KWH = 0.5;
 
 const SYSTEM_PROMPT =
   "You classify a message a user is about to send to an AI chatbot, to help " +
@@ -54,19 +51,28 @@ function storageSet(items) {
   });
 }
 
-async function accumulateUsage(totalTokens) {
-  if (!(totalTokens > 0)) return;
-  const kwh = totalTokens * KWH_PER_TOKEN;
-  const waterL = kwh * WATER_L_PER_KWH;
-  const items = await storageGet({ usageElectricityKwh: 0, usageWaterL: 0 });
+async function accumulateUsage(promptTokens, completionTokens) {
+  const impact = globalThis.ChatGuardImpact.estimateImpact(
+    Number(promptTokens) || 0,
+    Number(completionTokens) || 0
+  );
+  if (!(impact.kwh > 0)) return;
+  const items = await storageGet({
+    usageElectricityKwh: 0,
+    usageWaterL: 0,
+    usageCarbonG: 0
+  });
   const next = {
-    usageElectricityKwh: (items.usageElectricityKwh || 0) + kwh,
-    usageWaterL: (items.usageWaterL || 0) + waterL
+    usageElectricityKwh: (items.usageElectricityKwh || 0) + impact.kwh,
+    usageWaterL: (items.usageWaterL || 0) + impact.waterL,
+    usageCarbonG: (items.usageCarbonG || 0) + impact.carbonG
   };
   console.log(
-    "[ChatGuard] +usage tokens=" + totalTokens +
+    "[ChatGuard] +usage prompt_tokens=" + impact.promptTokens +
+    " completion_tokens=" + impact.completionTokens +
     " kWh=" + next.usageElectricityKwh.toFixed(6) +
-    " waterL=" + next.usageWaterL.toFixed(6)
+    " waterL=" + next.usageWaterL.toFixed(6) +
+    " carbonG=" + next.usageCarbonG.toFixed(6)
   );
   await storageSet(next);
 }
@@ -134,7 +140,11 @@ async function classify(text, attachments) {
   if (!res.ok) return { error: "http_" + res.status };
 
   const data = await res.json();
-  await accumulateUsage(data && data.usage && data.usage.total_tokens);
+  const usage = (data && data.usage) || {};
+  await accumulateUsage(
+    usage.prompt_tokens || usage.total_tokens || 0,
+    usage.completion_tokens || 0
+  );
 
   const content =
     data &&
