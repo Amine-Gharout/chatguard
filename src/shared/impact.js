@@ -7,18 +7,22 @@
  *   energy (kWh) = promptTokens * kWhPerPromptToken
  *                + completionTokens * kWhPerCompletionToken
  *   carbon  (g)  = energy * carbonGPerKwh          (grid intensity)
- *   water   (L)  = energy * waterLPerKwh           (data-centre WUE)
+ *   water   (L)  = energy * waterLPerKwh           (embedded grid water)
  *
- * Reference points for the defaults (order-of-magnitude, labelled "est." in
- * the UI):
- *   - Inference energy — Luccioni, Jernite & Strubell, "Power Hungry
- *     Processing" (ACM FAccT '24, arXiv:2311.16863): text generation costs
- *     ~0.047 kWh per 1,000 inferences. Completion (decoding) tokens cost ~2x
- *     prompt (prefill) tokens because decoding is memory-bandwidth bound.
- *   - Water usage effectiveness (WUE) — 0.91 L/kWh = Equinix global average
- *     2025 (published range 0 L/kWh air-cooled → 2.5 L/kWh evaporative).
- *   - Grid carbon intensity — ~430 gCO2e/kWh global average (~2022); varies
- *     from ~60 g (France) to ~800+ g (coal-heavy grids).
+ * Reference points for the defaults (labelled "est." in the UI — spot-check the
+ * sources before publication):
+ *   - Inference energy — Solovyeva et al. (2026): on consumer hardware a
+ *     prefill token costs ~0.13 J (3.61e-8 kWh) and a decode token ~1.06 J
+ *     (2.94e-7 kWh) — decode costs ~8x prefill because it is memory-bandwidth
+ *     bound. Quantisation lowers the decode cost further.
+ *   - Grid carbon intensity — ~480 gCO2e/kWh global average (Ember 2024);
+ *     ~19.6 in France, ~369 in the US, ~820 in coal-heavy regions.
+ *   - Water — a local machine uses no on-site cooling water, so the model uses
+ *     the water embedded in electricity generation: ~3.14 L/kWh (range
+ *     3.14–6.01; Li et al. 2023).
+ *   - Answer length — ~300 completion tokens for a typical chat answer
+ *     (ML.ENERGY benchmark). PUE is 1.0 for a local machine, so no PUE
+ *     multiplier is applied.
  *
  * Loaded as a classic script (content script and popup) and required in Node
  * tests. No dependencies, ES5-compatible.
@@ -27,17 +31,18 @@
   "use strict";
 
   var MODEL = {
-    // Energy per token (kWh). Completion ~2x prompt because decoding is
-    // memory-bandwidth bound.
-    kWhPerPromptToken: 3e-7,      // 0.3 kWh per 1,000,000 prompt tokens
-    kWhPerCompletionToken: 6e-7,  // 0.6 kWh per 1,000,000 completion tokens
+    // Energy per token (kWh). Decode ~8x prompt: prefill is compute-bound,
+    // decode is memory-bandwidth bound (weights + KV cache reloaded per token).
+    kWhPerPromptToken: 3.61e-8,     // ~0.13 J per prefill token
+    kWhPerCompletionToken: 2.94e-7, // ~1.06 J per decode token
     // Grid carbon intensity: gCO2e per kWh (global average).
-    carbonGPerKwh: 430,
-    // On-site data-centre cooling water: litres per kWh of IT energy.
-    waterLPerKwh: 0.91,
+    carbonGPerKwh: 480,
+    // Water embedded in electricity generation: litres per kWh. A local machine
+    // has ~0 on-site cooling water, so this is the off-site (grid) water.
+    waterLPerKwh: 3.14,
     // Counterfactual: assumed chatbot answer length (tokens) for a "how to"
     // query that the user backs out of.
-    assumedAnswerTokens: 400,
+    assumedAnswerTokens: 300,
     // Rough tokeniser ratio used to estimate prompt tokens from raw text
     // (English averages ~4 characters per token).
     charsPerToken: 4

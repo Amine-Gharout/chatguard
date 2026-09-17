@@ -25,18 +25,18 @@ test("zero tokens produce zero impact", () => {
 });
 
 test("prompt and completion tokens use distinct energy rates", () => {
-  assert.strictEqual(impact.estimateImpact(1000, 0).kwh, 1000 * 3e-7);
-  assert.strictEqual(impact.estimateImpact(0, 1000).kwh, 1000 * 6e-7);
+  assert.strictEqual(impact.estimateImpact(1000, 0).kwh, 1000 * 3.61e-8);
+  assert.strictEqual(impact.estimateImpact(0, 1000).kwh, 1000 * 2.94e-7);
 });
 
 test("carbon equals energy times grid intensity", () => {
   const r = impact.estimateImpact(1000, 0);
-  assert.strictEqual(r.carbonG, r.kwh * 430);
+  assert.strictEqual(r.carbonG, r.kwh * 480);
 });
 
-test("water equals energy times WUE", () => {
+test("water equals energy times embedded-grid water", () => {
   const r = impact.estimateImpact(1000, 0);
-  assert.strictEqual(r.waterL, r.kwh * 0.91);
+  assert.strictEqual(r.waterL, r.kwh * 3.14);
 });
 
 test("negative token counts are clamped to zero", () => {

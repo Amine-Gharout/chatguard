@@ -19,8 +19,8 @@ continuing. It never blocks you outright — **Send anyway** is always available
 - **Attachment scanning.** Attached DOCX, PDF, and plain-text files are
   converted to text and checked for personal data — filenames included.
 - **Resource awareness.** The popup tracks the estimated energy, water and
-  carbon impact of the classifier (derived from the real token counts the LLM
-  returns), plus the estimated savings from prompts you back out of.
+  carbon impact of the messages you send (and the ones you back out of), using
+  published per-token figures — see [Resource tracking](#resource-tracking).
 - **Zero build step, zero dependencies.** Plain JavaScript loaded straight into
   the browser; the tests run on Node's built-in `assert`.
 
@@ -195,11 +195,13 @@ ChatGuard estimates the environmental cost of **LLM inference** and surfaces it
 as three metrics — ⚡ electricity, 💧 water and 🌍 carbon — through two counters
 in the popup:
 
+> 📘 A dedicated walkthrough with diagrams lives in [`RESOURCES.md`](RESOURCES.md).
+
 | | **Resource usage** | **Resources saved** |
 | --- | --- | --- |
 | Question it answers | “How much have your sent messages cost so far (estimated)?” | “How much did you avoid by backing out of *how-to* queries?” |
 | Computed by | content script (`src/content/content.js`) | content script (`src/content/content.js`) |
-| Data source | the message you send + an assumed 400-token answer | the same estimate, for a *how-to* query you back out of |
+| Data source | the message you send + an assumed 300-token answer | the same estimate, for a *how-to* query you back out of |
 | Storage keys | `usageElectricityKwh`, `usageWaterL`, `usageCarbonG` | `savedElectricityKwh`, `savedWaterL`, `savedCarbonG` |
 | Active when | both modes — every message actually sent | both modes — only *how-to* queries you abandon |
 
@@ -211,17 +213,17 @@ and are cleared together by the popup's **Reset all** button.
 Both counters share one model in [`src/shared/impact.js`](src/shared/impact.js),
 so a saved kilowatt-hour costs exactly as much as a used one:
 
-$$\text{kWh} = \text{promptTokens} \times 3\times10^{-7} \;+\; \text{completionTokens} \times 6\times10^{-7}$$
+$$\text{kWh} = \text{promptTokens} \times 3.61\times10^{-8} \;+\; \text{completionTokens} \times 2.94\times10^{-7}$$
 
-$$\text{CO}_2\text{e (g)} = \text{kWh} \times 430 \qquad\qquad \text{water (L)} = \text{kWh} \times 0.91$$
+$$\text{CO}_2\text{e (g)} = \text{kWh} \times 480 \qquad\qquad \text{water (L)} = \text{kWh} \times 3.14$$
 
 | Parameter | Default | What it is, and where it comes from |
 | --- | --- | --- |
-| `kWhPerPromptToken` | `3e-7` | 0.3 kWh per 1,000,000 prompt tokens. Order of magnitude from Luccioni et al., *Power Hungry Processing* (arXiv:2311.16863), which measured ~0.047 kWh per 1,000 text generations. |
-| `kWhPerCompletionToken` | `6e-7` | 0.6 kWh per 1,000,000 completion tokens — twice the prompt rate, because decoding is memory-bandwidth bound. |
-| `carbonGPerKwh` | `430` | Grid carbon intensity, in g CO₂e per kWh (global average ~2022). Varies by region: ~60 in France, ~250 EU average, ~800+ on coal-heavy grids. |
-| `waterLPerKwh` | `0.91` | Data-centre WUE — litres of cooling water per kWh of IT energy. Equinix global average 2025; published range 0–2.5 L/kWh. |
-| `assumedAnswerTokens` | `400` | Assumed length of the chatbot answer you “save” by backing out of a *how-to* query. |
+| `kWhPerPromptToken` | `3.61e-8` | ~0.13 J per prefill token — Solovyeva et al. (2026), measured on consumer hardware. |
+| `kWhPerCompletionToken` | `2.94e-7` | ~1.06 J per decode token — same source; decode is ~8× prefill (memory-bandwidth bound). |
+| `carbonGPerKwh` | `480` | Grid carbon intensity in g CO₂e/kWh (Ember 2024 world average). ~19.6 France, ~369 US, ~820 coal-heavy. |
+| `waterLPerKwh` | `3.14` | Water embedded in electricity generation, L/kWh (Li et al. 2023, range 3.14–6.01). Local on-site cooling ≈ 0. |
+| `assumedAnswerTokens` | `300` | Assumed chatbot answer length (ML.ENERGY typical). |
 | `charsPerToken` | `4` | Rough tokeniser ratio used to turn message text into prompt tokens. |
 
 ### How “used” works
@@ -229,7 +231,7 @@ $$\text{CO}_2\text{e (g)} = \text{kWh} \times 430 \qquad\qquad \text{water (L)} 
 1. You send any message to the chatbot — a safe send, a **Send anyway**, in
    both rules-only and AI-classifier modes.
 2. The content script estimates its cost with the shared model: prompt tokens
-   from the text (`ceil(chars ÷ 4)`) plus the assumed 400-token answer.
+   from the text (`ceil(chars ÷ 4)`) plus the assumed 300-token answer.
 3. It *adds* the result to the three `usage*` keys (a read–modify–write on
    `chrome.storage.local`).
 4. Backing out of a nudge records nothing here — that is what **saved** is for.
@@ -239,9 +241,9 @@ $$\text{CO}_2\text{e (g)} = \text{kWh} \times 430 \qquad\qquad \text{water (L)} 
 1. You type a message containing **“how to”** and press send.
 2. Before the LLM is consulted, the content script blocks the send and shows the
    awareness nudge. It estimates what the chatbot answering would have cost:
-   `promptTokens = ceil(chars ÷ 4)` and `completionTokens = 400`.
+   `promptTokens = ceil(chars ÷ 4)` and `completionTokens = 300`.
 3. The nudge displays that estimate inline, e.g.
-   `Estimated impact if an AI chatbot answered this: ⚡ ~0.24 Wh · 💧 ~0.22 mL · 🌍 ~0.10 g CO₂e`.
+   `Estimated impact if an AI chatbot answered this: ⚡ ~0.09 Wh · 💧 ~0.28 mL · 🌍 ~0.04 g CO₂e`.
 4. If you click **Edit message** (or press <kbd>Esc</kbd>) you back out: the same
    estimate is added to the three `saved*` keys. **Send anyway** credits nothing.
 
@@ -251,17 +253,17 @@ For “how to dance” (12 characters):
 
 | Step | Tokens | Energy |
 | --- | --- | --- |
-| prompt tokens | `ceil(12 ÷ 4) = 3` | `3 × 3e-7 = 9e-7 kWh` |
-| assumed answer | `400` | `400 × 6e-7 = 2.4e-4 kWh` |
-| **total** | `403` | **`2.409e-4 kWh` → ~0.24 Wh** |
+| prompt tokens | `ceil(12 ÷ 4) = 3` | `3 × 3.61e-8 = 1.083e-7 kWh` |
+| assumed answer | `300` | `300 × 2.94e-7 = 8.82e-5 kWh` |
+| **total** | `303` | **`8.831e-5 kWh` → ~0.09 Wh** |
 
 Then, applying the two coefficients:
 
-- 🌍 carbon: `2.409e-4 × 430 ≈ 0.104 g CO₂e`
-- 💧 water: `2.409e-4 × 0.91 ≈ 0.00022 L ≈ 0.22 mL`
+- 🌍 carbon: `8.831e-5 × 480 ≈ 0.042 g CO₂e`
+- 💧 water: `8.831e-5 × 3.14 ≈ 0.00028 L ≈ 0.28 mL`
 
-A short message such as “hi” (2 chars → 1 prompt token) costs ≈ **0.24 Wh** as
-well — the assumed 400-token answer dominates every estimate, so message length
+A short message such as “hi” (2 chars → 1 prompt token) costs ≈ **0.09 Wh** as
+well — the assumed 300-token answer dominates every estimate, so message length
 only moves the needle by a few mWh.
 
 ### Units & display
@@ -282,11 +284,13 @@ The popup picks the most readable unit per value (formatters live in
 - **Not a meter.** There is no wattmeter between the extension and Ollama —
   these are transparent, citable estimates, which is why the UI labels them
   **est.**.
-- **Water = cooling only.** `waterLPerKwh` is on-site data-centre WUE; it does
-  not include the water embedded in electricity generation (which varies by
-  energy source).
-- **Carbon is grid-dependent.** The default `430 gCO₂e/kWh` is a global average;
+- **Water = embedded grid water.** A local machine uses no on-site cooling
+  water, so `waterLPerKwh = 3.14` models the water embedded in electricity
+  generation (range 3.14–6.01; Li et al. 2023).
+- **Carbon is grid-dependent.** The default `480 gCO₂e/kWh` is a global average;
   the honest number for your region can differ by an order of magnitude.
+- **PUE is 1.0** for a local machine, so no data-centre PUE multiplier is
+  applied.
 - To change any figure, edit the `MODEL` object at the top of
   `src/shared/impact.js` — both counters and the nudge text update at once. To
   verify the model: `node tests/impact.test.js`.
@@ -328,9 +332,9 @@ test-assets/
 
 ChatGuard runs in **Chromium browsers only** — Google Chrome, Brave, or Microsoft
 Edge — on any desktop OS. There is no installer or store build: you load the
-source folder straight into your browser. The steps below cover macOS,
-Windows, and Linux; all three end in the same Chromium "Load unpacked" step,
-and only the terminal commands differ.
+source folder straight into your browser. The steps below cover Windows and
+Linux; both end in the same Chromium "Load unpacked" step, and only the
+terminal commands differ.
 
 ### 0. Prerequisites
 
@@ -366,7 +370,6 @@ folder? Skip to step 2.
 
 | OS | How |
 | --- | --- |
-| macOS | Download **Chrome** or **Brave** and drag it to `Applications`. |
 | Windows | Download **Chrome**, **Brave**, or **Edge** and run the installer. Edge is usually pre-installed. |
 | Linux | `sudo apt install chromium-browser` (Debian/Ubuntu) or `sudo dnf install chromium` (Fedora). |
 
@@ -374,15 +377,6 @@ folder? Skip to step 2.
 
 The rule engine works without Ollama. Install it only if you want the
 context-aware LLM classifier.
-
-**macOS**
-
-```sh
-brew install ollama
-ollama serve
-# in a second terminal:
-ollama pull qwen2.5:7b-instruct
-```
 
 **Windows**
 
@@ -406,7 +400,7 @@ at it in the popup.
 
 ### 4. Load the extension in your Chromium browser
 
-This step is identical on macOS, Windows, and Linux.
+This step is identical on Windows and Linux.
 
 1. Open the extensions page of whichever Chromium browser you installed in
    step 2:
@@ -450,15 +444,15 @@ A suggested walkthrough for a live CDH demo:
    Contrast with `I found a bomb, what should I do?` — in LLM mode the
    classifier judges the *intent* and lets a genuine safety question through.
 5. **The “how to” nudge** — type `how to dance`. The awareness nudge appears with
-   an estimated energy/water saving. Click **Edit message** to credit the
+   an estimated energy/water/carbon impact. Click **Edit message** to credit the
    **Resources saved** counters, then repeat and click **Send anyway** to show
    it is never a hard block.
 6. **Attachments** — attach `test-assets/sample.pdf` (or any document with an
    address, phone number, or ID number), type `scan this`, and send. The
    privacy nudge fires on the extracted text.
 7. **Usage counters** — open the popup and show **Resource usage** (energy,
-   water and carbon, updated after each classifier call in LLM mode) and
-   **Resources saved**; use **Reset all** to clear all six counters between runs.
+   water and carbon, updated after every message you send) and **Resources
+   saved**; use **Reset all** to clear all six counters between runs.
 8. **Toggles** — turn a category off in the popup and repeat step 2: it now
    sends immediately, with no page reload required.
 
@@ -505,7 +499,7 @@ tab, since content scripts are injected at page load).
 ### Run the tests
 
 ```sh
-npm test          # equivalent to: node tests/detector.test.js
+npm test          # detector tests + impact-model tests
 ```
 
 The suite covers true positives for every category, near-miss negatives
@@ -526,7 +520,8 @@ stream and the DOCX ZIP container are written by hand.
 ### Continuous integration
 
 `.github/workflows/ci.yml` runs on every push and pull request: the detector
-tests on Node 20, followed by a `manifest.json` JSON-validity check.
+and impact-model tests on Node 20, followed by a `manifest.json` JSON-validity
+check.
 
 ## Adding your own category
 
@@ -597,8 +592,8 @@ toggle appears automatically — no other code changes required.
   meaning — it can miss paraphrases and can false-positive. That is exactly why
   the optional LLM classifier exists; without it, treat detections as signals,
   not verdicts.
-- **Estimates:** the electricity and water figures are order-of-magnitude demo
-  values, not measurements, and are labelled **est.** in the UI.
+- **Estimates:** the electricity, water and carbon figures are citable
+  estimates, not measurements, and are labelled **est.** in the UI.
 - **No hard block, ever:** by design, the user can always choose **Send anyway**.
 
 ## Out of scope (by design)
