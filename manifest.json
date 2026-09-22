@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "ChatGuard — Send Nudge (CDH Demo)",
+  "name": "ChatGuard — Send Nudge (Social Data School)",
   "version": "0.1.0",
   "description": "Research prototype: nudges you before sending sensitive/emotional messages (romantic, distress, self-harm, violence, explicit content, private info, and more) to ChatGPT, Claude, or Gemini. Runs fully locally.",
   "permissions": ["storage"],

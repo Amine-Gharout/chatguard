@@ -1,15 +1,16 @@
-# ChatGuard — Chatbot Send Nudge (CDH Demo)
+# ChatGuard — Chatbot Send Nudge (Social Data School)
 
 [![CI](https://github.com/Amine-Gharout/chatguard/actions/workflows/ci.yml/badge.svg)](https://github.com/Amine-Gharout/chatguard/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Manifest V3](https://img.shields.io/badge/Chrome-Manifest%20V3-4285F4.svg)](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3)
 [![Dependencies: none](https://img.shields.io/badge/dependencies-none-brightgreen.svg)](package.json)
 
-A Chromium (Manifest V3) browser-extension prototype from a **Cambridge Digital
-Humanities** project. When you try to send a sensitive or emotionally loaded
-message to **ChatGPT**, **Claude**, or **Gemini**, ChatGuard intercepts the send
-and shows a confirm-before-send modal so you can pause and reflect before
-continuing. It never blocks you outright — **Send anyway** is always available.
+A Chromium (Manifest V3) browser-extension prototype developed at the **Social
+Data School** organised by **Cambridge Digital Humanities**. When you try to send
+a sensitive or emotionally loaded message to **ChatGPT**, **Claude**, or
+**Gemini**, ChatGuard intercepts the send and shows a confirm-before-send modal
+so you can pause and reflect before continuing. It never blocks you outright —
+**Send anyway** is always available.
 
 - **Local by default.** Detection is a bundled offline rule engine with no API
   calls, no logging, and no telemetry.
@@ -42,13 +43,19 @@ continuing. It never blocks you outright — **Send anyway** is always available
 - [Troubleshooting](#troubleshooting)
 - [Notes & limitations](#notes--limitations)
 - [Out of scope (by design)](#out-of-scope-by-design)
+- [Credits & acknowledgements](#credits--acknowledgements)
 - [Licence](#licence)
 
 ## Research context & ethics
 
-ChatGuard is a working prototype from a Cambridge Digital Humanities project
-exploring how people form emotional attachments to AI chatbots, and whether a
-light-touch "nudge" can prompt reflection before sharing intimate content.
+ChatGuard was developed at the **Social Data School** organised by **Cambridge
+Digital Humanities**. It is a prototype produced during the School — not one of
+Cambridge Digital Humanities' ongoing research projects.
+
+It explores how people form emotional attachments to AI chatbots, and whether a
+light-touch "nudge" can prompt reflection before sharing intimate content. The
+design work was deliberately interdisciplinary; the
+[credits](#credits--acknowledgements) below name the team who shaped it.
 
 Design choices reflect this framing:
 
@@ -431,7 +438,7 @@ This step is identical on Windows and Linux.
 
 ## Demo script
 
-A suggested walkthrough for a live CDH demo:
+A suggested walkthrough for a live demo:
 
 1. **Baseline** — type a neutral message (e.g. `hi` or
    `how are you doing`) and press <kbd>Enter</kbd>. It sends normally.
@@ -602,9 +609,30 @@ Cloud API-based classification, telemetry, and store packaging/signing (Chrome
 Web Store). Firefox and Safari are not supported — ChatGuard is a
 Chromium-only extension.
 
+## Credits & acknowledgements
+
+ChatGuard was developed at the **Social Data School** organised by **Cambridge
+Digital Humanities**. It is a prototype produced during the School, not one of
+Cambridge Digital Humanities' ongoing research projects.
+
+Thanks to the team who designed it as a collaborative group project:
+
+- Dr. **Maruša Levstek**, PhD — [LinkedIn](https://www.linkedin.com/in/marusalevstek/)
+- **Mariel Louise Cunanan** — [LinkedIn](https://www.linkedin.com/in/mldcunanan/)
+- **Arsenii Platonov** — [LinkedIn](https://www.linkedin.com/in/arsenii-platonov/)
+- **Gitagowinda Feiz** — [LinkedIn](https://www.linkedin.com/in/gitagowinda/)
+
+The design work was intentionally interdisciplinary. Bringing together people
+from the humanities, social science and software engineering is what let the
+concept, the detection categories and the tone of the nudges take shape — each
+perspective surfaced risks and framings the others would have missed. That
+cross-disciplinary exchange is, we think, the most interesting part of the
+experiment.
+
 ## Licence
 
 [MIT](LICENSE) © 2026 ChatGuard contributors.
 
-*Research prototype from a Cambridge Digital Humanities project. It is meant for
-study and discussion, not as a substitute for professional support.*
+*Prototype developed at the Social Data School organised by Cambridge Digital
+Humanities. It is meant for study and discussion, not as a substitute for
+professional support.*

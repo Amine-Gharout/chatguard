@@ -182,8 +182,8 @@ node tests/impact.test.js
 
 ## 8. Research directions
 
-The literature review also surfaced eight nudge-related research questions for a
-Digital Humanities project:
+The literature review also surfaced eight nudge-related research questions for
+the project:
 
 | # | Question | Hypothesis |
 | --- | --- | --- |
