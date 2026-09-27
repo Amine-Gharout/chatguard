@@ -14,7 +14,7 @@ so you can pause and reflect before continuing. It never blocks you outright —
 
 - **Local by default.** Detection is a bundled offline rule engine with no API
   calls, no logging, and no telemetry.
-- **Optional AI classifier.** Turn on the local-LLM mode for context-aware
+- **Optional AI classifier.** Turn on the local-LLM mode for context-aware 
   detection; your message text is then sent to a local server (Ollama) running
   on your own machine, and nothing is logged.
 - **Attachment scanning.** Attached DOCX, PDF, and plain-text files are
