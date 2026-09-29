@@ -1,4 +1,4 @@
-# ChatGuard, Chatbot Send Nudge (Social Data School)
+# ChatGuard (Social Data School)
 
 [![CI](https://github.com/Amine-Gharout/chatguard/actions/workflows/ci.yml/badge.svg)](https://github.com/Amine-Gharout/chatguard/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
