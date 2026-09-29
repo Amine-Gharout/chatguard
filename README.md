@@ -1,4 +1,4 @@
-# ChatGuard — Chatbot Send Nudge (Social Data School)
+# ChatGuard, Chatbot Send Nudge (Social Data School)
 
 [![CI](https://github.com/Amine-Gharout/chatguard/actions/workflows/ci.yml/badge.svg)](https://github.com/Amine-Gharout/chatguard/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -9,7 +9,7 @@ A Chromium (Manifest V3) browser-extension prototype developed at the **Social
 Data School** organised by **Cambridge Digital Humanities**. When you try to send
 a sensitive or emotionally loaded message to **ChatGPT**, **Claude**, or
 **Gemini**, ChatGuard intercepts the send and shows a confirm-before-send modal
-so you can pause and reflect before continuing. It never blocks you outright —
+so you can pause and reflect before continuing. It never blocks you outright,
 **Send anyway** is always available.
 
 - **Local by default.** Detection is a bundled offline rule engine with no API
@@ -18,10 +18,10 @@ so you can pause and reflect before continuing. It never blocks you outright —
   detection; your message text is then sent to a local server (Ollama) running
   on your own machine, and nothing is logged.
 - **Attachment scanning.** Attached DOCX, PDF, and plain-text files are
-  converted to text and checked for personal data — filenames included.
+  converted to text and checked for personal data, filenames included.
 - **Resource awareness.** The popup tracks the estimated energy, water and
   carbon impact of the messages you send (and the ones you back out of), using
-  published per-token figures — see [Resource tracking](#resource-tracking).
+  published per-token figures, see [Resource tracking](#resource-tracking).
 - **Zero build step, zero dependencies.** Plain JavaScript loaded straight into
   the browser; the tests run on Node's built-in `assert`.
 
@@ -32,7 +32,7 @@ so you can pause and reflect before continuing. It never blocks you outright —
 - [How it works](#how-it-works)
 - [Resource tracking](#resource-tracking)
 - [Project structure](#project-structure)
-- [Installation — step by step](#installation--step-by-step)
+- [Installation, step by step](#installation--step-by-step)
 - [Verify it works](#verify-it-works)
 - [Demo script](#demo-script)
 - [Configuration reference](#configuration-reference)
@@ -49,7 +49,7 @@ so you can pause and reflect before continuing. It never blocks you outright —
 ## Research context & ethics
 
 ChatGuard was developed at the **Social Data School** organised by **Cambridge
-Digital Humanities**. It is a prototype produced during the School — not one of
+Digital Humanities**. It is a prototype produced during the School, not one of
 Cambridge Digital Humanities' ongoing research projects.
 
 It explores how people form emotional attachments to AI chatbots, and whether a
@@ -59,14 +59,14 @@ design work was deliberately interdisciplinary; the
 
 Design choices reflect this framing:
 
-- **Reflection, not judgement** — the modal asks you to pause; it never
+- **Reflection, not judgement**, the modal asks you to pause; it never
   prevents sending outright (you can always choose **Send anyway**).
-- **Careful handling of sensitive content** — categories such as self-harm /
+- **Careful handling of sensitive content**, categories such as self-harm /
   crisis include supportive copy and helpline numbers rather than shaming
   language.
-- **Privacy by default** — everything runs locally: no API calls, no logging,
+- **Privacy by default**, everything runs locally: no API calls, no logging,
   no analytics. Detection is a bundled offline rule engine.
-- **A prototype, not a guarantee** — rule-based detection can miss paraphrases
+- **A prototype, not a guarantee**, rule-based detection can miss paraphrases
   and can false-positive. It is meant for study and discussion, not as a
   substitute for human support.
 
@@ -87,8 +87,8 @@ Every category is independently toggleable from the toolbar popup and defaults
 to **on**. The rules live in the `CATEGORIES` array of
 `src/shared/detector.js`: each category ships word-boundary-aware regular
 expressions and a match-count `threshold` (currently `1` for all categories).
-Text is normalised first — lower-cased, curly quotes/apostrophes straightened,
-whitespace collapsed — so `I’m in love with you` matches the same rule as
+Text is normalised first, lower-cased, curly quotes/apostrophes straightened,
+whitespace collapsed, so `I’m in love with you` matches the same rule as
 `I'm in love with you`.
 
 > **`howto` is not a detector category.** It is a separate awareness nudge
@@ -112,7 +112,7 @@ whitespace collapsed — so `I’m in love with you` matches the same rule as
    | Mode | What happens |
    | --- | --- |
    | **Rules only** (`useLLM` off) | The rule engine runs immediately. A hit cancels the send; otherwise the message goes through. |
-   | **AI classifier** (`useLLM` on — the default) | The send is paused, a subtle “Analyzing…” pill appears, and the message plus attachment text are classified by the local LLM. Only a flagged message interrupts with the full modal. The check times out after **15 s** and silently falls back to the rule engine. |
+   | **AI classifier** (`useLLM` on, the default) | The send is paused, a subtle “Analyzing…” pill appears, and the message plus attachment text are classified by the local LLM. Only a flagged message interrupts with the full modal. The check times out after **15 s** and silently falls back to the rule engine. |
 
 5. When something is flagged, the event is cancelled
    (`preventDefault()` + `stopPropagation()` + `stopImmediatePropagation()`)
@@ -120,11 +120,11 @@ whitespace collapsed — so `I’m in love with you` matches the same rule as
    leak in. The modal rotates between several educational messages per
    category (research citations, privacy notes, helpline links).
 6. The modal offers two actions:
-   - **Send anyway** — re-sends programmatically by clicking the real send
+   - **Send anyway**, re-sends programmatically by clicking the real send
      button under a one-shot bypass flag; if that fails it synthesises an
      <kbd>Enter</kbd> keydown, and only logs a `console.warn` if both paths
      fail.
-   - **Edit message** — dismisses the modal, clears cached attachment text (so
+   - **Edit message**, dismisses the modal, clears cached attachment text (so
      a removed file is not re-flagged), and refocuses the composer.
      <kbd>Esc</kbd> behaves the same as **Edit message**.
 7. Pressing <kbd>Esc</kbd> while an LLM check is in flight cancels the check and
@@ -134,7 +134,7 @@ whitespace collapsed — so `I’m in love with you` matches the same rule as
 
 Attachments are captured from the file input, drag-and-drop, and paste events,
 then converted to plain text using browser APIs only (`DecompressionStream`,
-`TextDecoder`, `DOMParser`) — no external libraries:
+`TextDecoder`, `DOMParser`), no external libraries:
 
 | Format | Extraction |
 | --- | --- |
@@ -156,7 +156,7 @@ then converted to plain text using browser APIs only (`DecompressionStream`,
 ### “How to” awareness nudge
 
 Any message containing the phrase **“how to”** triggers a dedicated awareness
-nudge *before* the LLM is consulted — no round-trip required. The nudge adds an
+nudge *before* the LLM is consulted, no round-trip required. The nudge adds an
 estimated energy/water/carbon line and educational copy about AI limitations,
 data-centre water use, and labour conditions in the AI supply chain. Backing out
 of it with **Edit message** credits your **resources saved** counters; sending it
@@ -165,8 +165,8 @@ anyway does not. Copy lives in `CATEGORY_MESSAGES.howto` in
 
 ### Resource counters
 
-The popup shows two estimated counters — **Resource usage** and
-**Resources saved** — each expressed in ⚡ electricity, 💧 water and 🌍 carbon.
+The popup shows two estimated counters, **Resource usage** and
+**Resources saved**, each expressed in ⚡ electricity, 💧 water and 🌍 carbon.
 Both derive from one shared estimation model, detailed in the
 [Resource tracking](#resource-tracking) section below.
 
@@ -191,15 +191,15 @@ Both derive from one shared estimation model, detailed in the
   timeout falls back to the rule engine, so ChatGuard keeps working offline.
 - Classification runs in an MV3 **service worker**
   (`src/background/service-worker.js`), which is also what lets it bypass the
-  API's CORS restrictions — so this mode requires a Chromium browser (Chrome,
+  API's CORS restrictions, so this mode requires a Chromium browser (Chrome,
   Brave, or Edge).
-- Any OpenAI-compatible local server works, not just Ollama — just point
+- Any OpenAI-compatible local server works, not just Ollama, just point
   **Base URL** at it.
 
 ## Resource tracking
 
 ChatGuard estimates the environmental cost of **LLM inference** and surfaces it
-as three metrics — ⚡ electricity, 💧 water and 🌍 carbon — through two counters
+as three metrics, ⚡ electricity, 💧 water and 🌍 carbon, through two counters
 in the popup:
 
 > 📘 A dedicated walkthrough with diagrams lives in [`RESOURCES.md`](RESOURCES.md).
@@ -210,7 +210,7 @@ in the popup:
 | Computed by | content script (`src/content/content.js`) | content script (`src/content/content.js`) |
 | Data source | the message you send + an assumed 300-token answer | the same estimate, for a *how-to* query you back out of |
 | Storage keys | `usageElectricityKwh`, `usageWaterL`, `usageCarbonG` | `savedElectricityKwh`, `savedWaterL`, `savedCarbonG` |
-| Active when | both modes — every message actually sent | both modes — only *how-to* queries you abandon |
+| Active when | both modes, every message actually sent | both modes, only *how-to* queries you abandon |
 
 All six values live in `chrome.storage.local`, are labelled **est.** in the UI,
 and are cleared together by the popup's **Reset all** button.
@@ -226,8 +226,8 @@ $$\text{CO}_2\text{e (g)} = \text{kWh} \times 480 \qquad\qquad \text{water (L)} 
 
 | Parameter | Default | What it is, and where it comes from |
 | --- | --- | --- |
-| `kWhPerPromptToken` | `3.61e-8` | ~0.13 J per prefill token — Solovyeva et al. (2026), measured on consumer hardware. |
-| `kWhPerCompletionToken` | `2.94e-7` | ~1.06 J per decode token — same source; decode is ~8× prefill (memory-bandwidth bound). |
+| `kWhPerPromptToken` | `3.61e-8` | ~0.13 J per prefill token, Solovyeva et al. (2026), measured on consumer hardware. |
+| `kWhPerCompletionToken` | `2.94e-7` | ~1.06 J per decode token, same source; decode is ~8× prefill (memory-bandwidth bound). |
 | `carbonGPerKwh` | `480` | Grid carbon intensity in g CO₂e/kWh (Ember 2024 world average). ~19.6 France, ~369 US, ~820 coal-heavy. |
 | `waterLPerKwh` | `3.14` | Water embedded in electricity generation, L/kWh (Li et al. 2023, range 3.14–6.01). Local on-site cooling ≈ 0. |
 | `assumedAnswerTokens` | `300` | Assumed chatbot answer length (ML.ENERGY typical). |
@@ -235,13 +235,13 @@ $$\text{CO}_2\text{e (g)} = \text{kWh} \times 480 \qquad\qquad \text{water (L)} 
 
 ### How “used” works
 
-1. You send any message to the chatbot — a safe send, a **Send anyway**, in
+1. You send any message to the chatbot, a safe send, a **Send anyway**, in
    both rules-only and AI-classifier modes.
 2. The content script estimates its cost with the shared model: prompt tokens
    from the text (`ceil(chars ÷ 4)`) plus the assumed 300-token answer.
 3. It *adds* the result to the three `usage*` keys (a read–modify–write on
    `chrome.storage.local`).
-4. Backing out of a nudge records nothing here — that is what **saved** is for.
+4. Backing out of a nudge records nothing here, that is what **saved** is for.
 
 ### How “saved” works
 
@@ -270,7 +270,7 @@ Then, applying the two coefficients:
 - 💧 water: `8.831e-5 × 3.14 ≈ 0.00028 L ≈ 0.28 mL`
 
 A short message such as “hi” (2 chars → 1 prompt token) costs ≈ **0.09 Wh** as
-well — the assumed 300-token answer dominates every estimate, so message length
+well, the assumed 300-token answer dominates every estimate, so message length
 only moves the needle by a few mWh.
 
 ### Units & display
@@ -278,9 +278,9 @@ only moves the needle by a few mWh.
 The popup picks the most readable unit per value (formatters live in
 `src/shared/impact.js`):
 
-- ⚡ electricity — `Wh` below 1 kWh, otherwise `kWh`
-- 💧 water — `mL` below 1 L, otherwise `L`
-- 🌍 carbon — `g CO₂e` below 1 kg, otherwise `kg CO₂e`
+- ⚡ electricity, `Wh` below 1 kWh, otherwise `kWh`
+- 💧 water, `mL` below 1 L, otherwise `L`
+- 🌍 carbon, `g CO₂e` below 1 kg, otherwise `kg CO₂e`
 
 ### Scope, caveats & recalibration
 
@@ -288,7 +288,7 @@ The popup picks the most readable unit per value (formatters live in
   educational quotes cite large cloud models (e.g. “~0.5 L per GPT-3 query”);
   those include training amortisation and full data-centre overhead, so they are
   a different, much larger scope than the counters.
-- **Not a meter.** There is no wattmeter between the extension and Ollama —
+- **Not a meter.** There is no wattmeter between the extension and Ollama,
   these are transparent, citable estimates, which is why the UI labels them
   **est.**.
 - **Water = embedded grid water.** A local machine uses no on-site cooling
@@ -299,14 +299,14 @@ The popup picks the most readable unit per value (formatters live in
 - **PUE is 1.0** for a local machine, so no data-centre PUE multiplier is
   applied.
 - To change any figure, edit the `MODEL` object at the top of
-  `src/shared/impact.js` — both counters and the nudge text update at once. To
+  `src/shared/impact.js`, both counters and the nudge text update at once. To
   verify the model: `node tests/impact.test.js`.
 
 ## Project structure
 
 ```
 manifest.json                       MV3 manifest (permissions, content scripts, service worker)
-package.json                        npm scripts: test, icons — no dependencies
+package.json                        npm scripts: test, icons, no dependencies
 LICENSE                             MIT
 icons/                              generated heart icons (icon16/48/128.png)
 src/
@@ -335,10 +335,10 @@ test-assets/
 .github/workflows/ci.yml            CI: detector + impact tests, manifest.json validation
 ```
 
-## Installation — step by step
+## Installation, step by step
 
-ChatGuard runs in **Chromium browsers only** — Google Chrome, Brave, or Microsoft
-Edge — on any desktop OS. There is no installer or store build: you load the
+ChatGuard runs in **Chromium browsers only**, Google Chrome, Brave, or Microsoft
+Edge, on any desktop OS. There is no installer or store build: you load the
 source folder straight into your browser. The steps below cover Windows and
 Linux; both end in the same Chromium "Load unpacked" step, and only the
 terminal commands differ.
@@ -347,18 +347,18 @@ terminal commands differ.
 
 - A Chromium browser (required): **Google Chrome**, **Brave**, or
   **Microsoft Edge** (any recent version). ChatGuard only runs in Chromium.
-- **Ollama** (optional) — only needed for the AI classifier. The rule engine
+- **Ollama** (optional), only needed for the AI classifier. The rule engine
   runs with no dependencies at all.
-- **Git** (optional) — only needed if you clone the repository instead of
+- **Git** (optional), only needed if you clone the repository instead of
   downloading a ZIP.
-- **Node.js 20+** (optional) — only needed to run the tests and the asset
+- **Node.js 20+** (optional), only needed to run the tests and the asset
   generators (`npm test`, `npm run icons`).
 
 ### 1. Get the code
 
 Pick one method.
 
-**Option A — Git (recommended):**
+**Option A, Git (recommended):**
 
 ```sh
 git clone https://github.com/Amine-Gharout/chatguard.git
@@ -368,7 +368,7 @@ cd chatguard
 If you forked the project, clone your own fork instead. Already have the
 folder? Skip to step 2.
 
-**Option B — Download ZIP:**
+**Option B, Download ZIP:**
 
 1. Download the repository as a ZIP file.
 2. Unzip it and remember the path of the extracted `chatguard` folder.
@@ -402,7 +402,7 @@ ollama serve &
 ollama pull qwen2.5:7b-instruct
 ```
 
-Any OpenAI-compatible local server works — just point ChatGuard's **Base URL**
+Any OpenAI-compatible local server works, just point ChatGuard's **Base URL**
 at it in the popup.
 
 ### 4. Load the extension in your Chromium browser
@@ -423,44 +423,44 @@ This step is identical on Windows and Linux.
 
 1. Click the ChatGuard toolbar icon to open the popup.
 2. Check **AI classifier (Local LLM)**.
-3. Confirm the defaults — **Base URL** `http://127.0.0.1:11434/v1/chat/completions`
-   and **Model** `qwen2.5:7b-instruct` — or set your own local endpoint.
+3. Confirm the defaults, **Base URL** `http://127.0.0.1:11434/v1/chat/completions`
+   and **Model** `qwen2.5:7b-instruct`, or set your own local endpoint.
 4. Make sure Ollama is running (`ollama serve`).
 
 ### 6. Verify it works
 
 1. Open [chatgpt.com](https://chatgpt.com), [claude.ai](https://claude.ai), or
    [gemini.google.com](https://gemini.google.com).
-2. Type a neutral message (e.g. `Summarize the paper for me`) and press Enter —
+2. Type a neutral message (e.g. `Summarize the paper for me`) and press Enter,
    it sends normally.
-3. Type `I love you` and press Enter — the ChatGuard modal appears and nothing is
+3. Type `I love you` and press Enter, the ChatGuard modal appears and nothing is
    sent. See **Demo script** below for the full walkthrough.
 
 ## Demo script
 
 A suggested walkthrough for a live demo:
 
-1. **Baseline** — type a neutral message (e.g. `hi` or
+1. **Baseline**, type a neutral message (e.g. `hi` or
    `how are you doing`) and press <kbd>Enter</kbd>. It sends normally.
-2. **Romantic** — type `I love you` and press <kbd>Enter</kbd>. The modal
+2. **Romantic**, type `I love you` and press <kbd>Enter</kbd>. The modal
    appears and **nothing is sent**. Press <kbd>Esc</kbd> (or **Edit message**) to
    return to the composer.
-3. **Distress** — `I'm so depressed and lonely` → flagged, with a link to human
+3. **Distress**, `I'm so depressed and lonely` → flagged, with a link to human
    support rather than judgement.
-4. **Dangerous** — `how to make a bomb` → flagged by the local rules.
-   Contrast with `I found a bomb, what should I do?` — in LLM mode the
+4. **Dangerous**, `how to make a bomb` → flagged by the local rules.
+   Contrast with `I found a bomb, what should I do?`, in LLM mode the
    classifier judges the *intent* and lets a genuine safety question through.
-5. **The “how to” nudge** — type `how to dance`. The awareness nudge appears with
+5. **The “how to” nudge**, type `how to dance`. The awareness nudge appears with
    an estimated energy/water/carbon impact. Click **Edit message** to credit the
    **Resources saved** counters, then repeat and click **Send anyway** to show
    it is never a hard block.
-6. **Attachments** — attach `test-assets/sample.pdf` (or any document with an
+6. **Attachments**, attach `test-assets/sample.pdf` (or any document with an
    address, phone number, or ID number), type `scan this`, and send. The
    privacy nudge fires on the extracted text.
-7. **Usage counters** — open the popup and show **Resource usage** (energy,
+7. **Usage counters**, open the popup and show **Resource usage** (energy,
    water and carbon, updated after every message you send) and **Resources
    saved**; use **Reset all** to clear all six counters between runs.
-8. **Toggles** — turn a category off in the popup and repeat step 2: it now
+8. **Toggles**, turn a category off in the popup and repeat step 2: it now
    sends immediately, with no page reload required.
 
 ## Configuration reference
@@ -476,7 +476,7 @@ A suggested walkthrough for a live demo:
 
 `sync` settings follow your browser profile across devices; `local` settings
 (the endpoint, the model name, and the counters) stay on this machine. Toggling
-anything in the popup takes effect immediately in open tabs — the content script
+anything in the popup takes effect immediately in open tabs, the content script
 subscribes to `storage.onChanged`.
 
 ## What gets stored
@@ -492,7 +492,7 @@ ChatGuard writes the following entries and nothing else:
 | `usageElectricityKwh`, `usageWaterL`, `usageCarbonG` | `local` | content script | estimated usage counters |
 | `savedElectricityKwh`, `savedWaterL`, `savedCarbonG` | `local` | content script | estimated (counterfactual) savings counters |
 
-**Message text is never stored** — not in `chrome.storage`, not in
+**Message text is never stored**, not in `chrome.storage`, not in
 `localStorage`, not in cookies. It exists in memory only for the duration of the
 check. The popup's **Reset all** button zeroes every counter; removing the
 extension removes everything.
@@ -521,7 +521,7 @@ npm run icons                          # rebuild icons/icon16|48|128.png
 node scripts/generate-test-files.js    # rebuild test-assets/sample.{txt,pdf,docx}
 ```
 
-Both scripts use only Node's built-in `zlib`, `fs`, and `path` — the PDF deflate
+Both scripts use only Node's built-in `zlib`, `fs`, and `path`, the PDF deflate
 stream and the DOCX ZIP container are written by hand.
 
 ### Continuous integration
@@ -533,7 +533,7 @@ check.
 ## Adding your own category
 
 The engine is category-generic, so adding a new signal touches three files at
-most. Example — a hostility category:
+most. Example, a hostility category:
 
 1. Add an entry to the `CATEGORIES` array in `src/shared/detector.js`:
 
@@ -556,13 +556,13 @@ most. Example — a hostility category:
    `npm test`.
 
 The popup renders its switches from `ChatGuardDetector.CATEGORIES`, so the new
-toggle appears automatically — no other code changes required.
+toggle appears automatically, no other code changes required.
 
 ## Privacy & data flow
 
 - **Rules mode:** nothing leaves the page. No network requests are made at all.
-- **LLM mode:** the composer text and the extracted attachment text are sent —
-  by the background service worker — to the endpoint you configured, truncated
+- **LLM mode:** the composer text and the extracted attachment text are sent,
+  by the background service worker, to the endpoint you configured, truncated
   to 24 000 characters. The manifest declares host permissions only for
   `http://localhost/*` and `http://127.0.0.1/*`, and the only permission
   requested is `storage`.
@@ -578,8 +578,8 @@ toggle appears automatically — no other code changes required.
 | The modal never appears. | Check **Enable nudges** and the relevant category switch in the popup, then reload the chat tab (content scripts are injected at page load). |
 | The “Analyzing…” pill flashes and the message sends. | The classifier is unreachable. Confirm `ollama serve` is running, the model is pulled (`ollama list`), and the **Base URL** is correct. After 15 s or any error, ChatGuard falls back to the rules. |
 | Nothing is detected on a site that previously worked. | The site changed its markup. Open DevTools and look for `[ChatGuard]` logs, then update the selector candidates in `src/content/dom.js`. |
-| An attachment is not scanned. | Only the 5 most recent files, each ≤ 10 MB, are analysed. Scanned PDFs yield no text — but the filename is still checked. |
-| Firefox or Safari. | Not supported — the classifier needs an MV3 service worker. |
+| An attachment is not scanned. | Only the 5 most recent files, each ≤ 10 MB, are analysed. Scanned PDFs yield no text, but the filename is still checked. |
+| Firefox or Safari. | Not supported, the classifier needs an MV3 service worker. |
 | Tests fail after editing rules. | Run `npm test` and check that your regex still passes the near-miss negatives (`I love this tool`, `I missed the meeting`). |
 
 ## Notes & limitations
@@ -596,7 +596,7 @@ toggle appears automatically — no other code changes required.
   moral judgement, to fit the research framing. Edit the strings in
   `src/content/modal.js` to change it.
 - **Rule-based limits:** the offline engine matches keywords and phrases, not
-  meaning — it can miss paraphrases and can false-positive. That is exactly why
+  meaning, it can miss paraphrases and can false-positive. That is exactly why
   the optional LLM classifier exists; without it, treat detections as signals,
   not verdicts.
 - **Estimates:** the electricity, water and carbon figures are citable
@@ -606,7 +606,7 @@ toggle appears automatically — no other code changes required.
 ## Out of scope (by design)
 
 Cloud API-based classification, telemetry, and store packaging/signing (Chrome
-Web Store). Firefox and Safari are not supported — ChatGuard is a
+Web Store). Firefox and Safari are not supported, ChatGuard is a
 Chromium-only extension.
 
 ## Credits & acknowledgements
@@ -617,14 +617,14 @@ Cambridge Digital Humanities' ongoing research projects.
 
 Thanks to the team who designed it as a collaborative group project:
 
-- Dr. **Maruša Levstek**, PhD — [LinkedIn](https://www.linkedin.com/in/marusalevstek/)
-- **Mariel Louise Cunanan** — [LinkedIn](https://www.linkedin.com/in/mldcunanan/)
-- **Arsenii Platonov** — [LinkedIn](https://www.linkedin.com/in/arsenii-platonov/)
-- **Gitagowinda Feiz** — [LinkedIn](https://www.linkedin.com/in/gitagowinda/)
+- Dr. **Maruša Levstek**, PhD, [LinkedIn](https://www.linkedin.com/in/marusalevstek/)
+- **Mariel Louise Cunanan**, [LinkedIn](https://www.linkedin.com/in/mldcunanan/)
+- **Arsenii Platonov**, [LinkedIn](https://www.linkedin.com/in/arsenii-platonov/)
+- **Gitagowinda Feiz**, [LinkedIn](https://www.linkedin.com/in/gitagowinda/)
 
 The design work was intentionally interdisciplinary. Bringing together people
 from the humanities, social science and software engineering is what let the
-concept, the detection categories and the tone of the nudges take shape — each
+concept, the detection categories and the tone of the nudges take shape, each
 perspective surfaced risks and framings the others would have missed. That
 cross-disciplinary exchange is, we think, the most interesting part of the
 experiment.
