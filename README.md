@@ -49,8 +49,7 @@ so you can pause and reflect before continuing. It never blocks you outright,
 ## Research context & ethics
 
 ChatGuard was developed at the **Social Data School** organised by **Cambridge
-Digital Humanities**. It is a prototype produced during the School, not one of
-Cambridge Digital Humanities' ongoing research projects.
+Digital Humanities**. It is a prototype produced during the School.
 
 It explores how people form emotional attachments to AI chatbots, and whether a
 light-touch "nudge" can prompt reflection before sharing intimate content. The
@@ -98,8 +97,7 @@ whitespace collapsed, so `I’m in love with you` matches the same rule as
 
 ## How it works
 
-1. A content script is injected into `chatgpt.com`, `chat.openai.com`,
-   `claude.ai`, and `gemini.google.com` at `document_idle`.
+1. A content script is injected into `chatgpt.com` at `document_idle`.
 2. It listens, in the **capture phase**, for the two user-initiated send
    triggers:
    - pressing **Enter** in the composer (without <kbd>Shift</kbd>), or
@@ -138,7 +136,6 @@ then converted to plain text using browser APIs only (`DecompressionStream`,
 
 | Format | Extraction |
 | --- | --- |
-| `.docx` | ZIP (deflate) → `word/document.xml` → paragraph text |
 | `.pdf` | Best-effort text extraction from `FlateDecode` streams (`Tj` / `TJ` operators) |
 | `.txt`, `.md`, `.csv`, `.json`, `.xml`, `.html`, and code | UTF-8 decode |
 
@@ -345,8 +342,7 @@ terminal commands differ.
 
 ### 0. Prerequisites
 
-- A Chromium browser (required): **Google Chrome**, **Brave**, or
-  **Microsoft Edge** (any recent version). ChatGuard only runs in Chromium.
+- A Chromium browser (required): **Google Chrome**.
 - **Ollama** (optional), only needed for the AI classifier. The rule engine
   runs with no dependencies at all.
 - **Git** (optional), only needed if you clone the repository instead of
@@ -412,14 +408,13 @@ This step is identical on Windows and Linux.
 1. Open the extensions page of whichever Chromium browser you installed in
    step 2:
    - Chrome: `chrome://extensions`
-   - Brave: `brave://extensions`
-   - Edge: `edge://extensions`
+
 2. Toggle on **Developer mode** (usually a switch in the top-right corner).
 3. Click **Load unpacked** and select the `chatguard` folder (the one containing
    `manifest.json`).
 4. Pin ChatGuard from the toolbar puzzle-piece menu so the popup is easy to reach.
 
-### 5. Turn on the AI classifier (optional)
+### 5. Turn on the AI classifier 
 
 1. Click the ChatGuard toolbar icon to open the popup.
 2. Check **AI classifier (Local LLM)**.
@@ -429,8 +424,7 @@ This step is identical on Windows and Linux.
 
 ### 6. Verify it works
 
-1. Open [chatgpt.com](https://chatgpt.com), [claude.ai](https://claude.ai), or
-   [gemini.google.com](https://gemini.google.com).
+1. Open [chatgpt.com](https://chatgpt.com).
 2. Type a neutral message (e.g. `Summarize the paper for me`) and press Enter,
    it sends normally.
 3. Type `I love you` and press Enter, the ChatGuard modal appears and nothing is
@@ -617,10 +611,10 @@ Cambridge Digital Humanities' ongoing research projects.
 
 Thanks to the team who designed it as a collaborative group project:
 
-- Dr. **Maruša Levstek**, PhD, [LinkedIn](https://www.linkedin.com/in/marusalevstek/)
-- **Mariel Louise Cunanan**, [LinkedIn](https://www.linkedin.com/in/mldcunanan/)
-- **Arsenii Platonov**, [LinkedIn](https://www.linkedin.com/in/arsenii-platonov/)
-- **Gitagowinda Feiz**, [LinkedIn](https://www.linkedin.com/in/gitagowinda/)
+- Dr. **Maruša Levstek**, 
+- **Mariel Louise Cunanan**, 
+- **Arsenii Platonov**, 
+- **Gitagowinda Feiz**, 
 
 The design work was intentionally interdisciplinary. Bringing together people
 from the humanities, social science and software engineering is what let the
@@ -634,5 +628,4 @@ experiment.
 [MIT](LICENSE) © 2026 ChatGuard contributors.
 
 *Prototype developed at the Social Data School organised by Cambridge Digital
-Humanities. It is meant for study and discussion, not as a substitute for
-professional support.*
+Humanities. It is meant for study and discussion.
