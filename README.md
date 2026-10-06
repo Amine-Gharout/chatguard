@@ -27,7 +27,7 @@ so you can pause and reflect before continuing. It never blocks you outright,
 
 **Contents**
 
-- [Research context & ethics](#research-context--ethics)
+- [Context & ethics](#context--ethics)
 - [Detection categories](#detection-categories)
 - [How it works](#how-it-works)
 - [Resource tracking](#resource-tracking)
@@ -46,10 +46,10 @@ so you can pause and reflect before continuing. It never blocks you outright,
 - [Credits & acknowledgements](#credits--acknowledgements)
 - [Licence](#licence)
 
-## Research context & ethics
+## Context & ethics
 
-ChatGuard was developed at the **Social Data School** organised by **Cambridge
-Digital Humanities**. It is a prototype produced during the School.
+ChatGuard is a prototype developed at the **Social Data School** organised by
+**Cambridge Digital Humanities**.
 
 It explores how people form emotional attachments to AI chatbots, and whether a
 light-touch "nudge" can prompt reflection before sharing intimate content. The
@@ -587,7 +587,7 @@ toggle appears automatically, no other code changes required.
   if that fails it synthesises an `Enter` keydown. A `console.warn` is emitted
   only if both paths fail.
 - **Tone:** the modal copy is deliberately a reflection nudge rather than a
-  moral judgement, to fit the research framing. Edit the strings in
+  moral judgement, to fit the prototype's framing. Edit the strings in
   `src/content/modal.js` to change it.
 - **Rule-based limits:** the offline engine matches keywords and phrases, not
   meaning, it can miss paraphrases and can false-positive. That is exactly why
@@ -605,27 +605,26 @@ Chromium-only extension.
 
 ## Credits & acknowledgements
 
-ChatGuard was developed at the **Social Data School** organised by **Cambridge
-Digital Humanities**. It is a prototype produced during the School, not one of
-Cambridge Digital Humanities' ongoing research projects.
+ChatGuard is a prototype developed at the **Social Data School** organised by
+**Cambridge Digital Humanities**.
 
-Thanks to the team who designed it as a collaborative group project:
+Thanks to the team who designed it as a group project at the Social Data School:
 
 - Dr. **Maruša Levstek**, 
 - **Mariel Louise Cunanan**, 
 - **Arsenii Platonov**, 
 - **Gitagowinda Feiz**, 
 
-The design work was intentionally interdisciplinary. Bringing together people
-from the humanities, social science and software engineering is what let the
-concept, the detection categories and the tone of the nudges take shape, each
-perspective surfaced risks and framings the others would have missed. That
-cross-disciplinary exchange is, we think, the most interesting part of the
-experiment.
+The design benefited from people with different disciplinary backgrounds working
+together. Bringing together people from the humanities, social science and
+software engineering is what let the concept, the detection categories and the
+tone of the nudges take shape — each perspective surfaced risks and framings the
+others would have missed. That cross-disciplinary exchange is, we think, the
+most interesting part of the experiment.
 
 ## Licence
 
 [MIT](LICENSE) © 2026 ChatGuard contributors.
 
-*Prototype developed at the Social Data School organised by Cambridge Digital
-Humanities. It is meant for study and discussion.
+*A prototype developed at the Social Data School organised by Cambridge Digital
+Humanities. It is meant for study and discussion.*
